@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>红白与黑白 · 灵梦 × 魔理沙</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23e8dcae'/%3E%3Ccircle cx='24' cy='24' r='7' fill='%23b8a876' opacity='0.5'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css?v=6">
+</head>
+<body>
+  <!-- 夜空背景 -->
+  <div class="sky" aria-hidden="true">
+    <div class="stars"></div>
+    <div class="moon"></div>
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    <div class="ofuda ofuda-1"></div>
+    <div class="ofuda ofuda-2"></div>
+    <div class="ofuda ofuda-3"></div>
+    <div class="spirit spirit-1"></div>
+    <div class="spirit spirit-2"></div>
+    <div class="spirit spirit-3"></div>
+    <div class="spirit spirit-4"></div>
+    <div class="torii"></div>
+  </div>
+
+  <div class="page">
+    <header class="header">
+      <div class="header-inner">
+        <h1>红白与黑白</h1>
+        <p class="subtitle">主角组 · 博丽灵梦 × 雾雨魔理沙</p>
+        <div class="cast">
+          <span class="chip chip-reimu">博丽灵梦</span>
+          <i>×</i>
+          <span class="chip chip-marisa">雾雨魔理沙</span>
+        </div>
+        <div class="badge-row">
+          <span class="mode-badge demo" id="modeBadge">演示模式</span>
+          <span class="status-dot" id="statusDot" title="连接状态"></span>
+          <button class="btn small ghost about-btn" id="aboutBtn" type="button">关于本站</button>
+        </div>
+      </div>
+    </header>
+
+    <nav class="view-tabs" aria-label="切换界面">
+      <button class="view-tab active" id="manualTab" type="button">手动对谈</button>
+      <button class="view-tab" id="autoTab" type="button">自动闲聊</button>
+    </nav>
+
+    <div class="view" id="manualView">
+      <main class="chat">
+        <div class="chat-log" id="chatLog" role="log" aria-live="polite">
+          <div class="welcome" id="welcome">
+            <p>两位主角正在神社前等你开场。</p>
+            <p>设定一个话题，比如「今天的异变」「蘑菇收成」「香油钱」……</p>
+          </div>
+        </div>
+      </main>
+
+      <section class="controls">
+      <div class="topic-row">
+        <input id="topicInput" type="text" maxlength="80" placeholder="设定话题，例如：神社后面又出现异变了…"
+               autocomplete="off">
+        <button class="btn primary" id="startBtn">开始对话</button>
+        <button class="btn" id="stopBtn" hidden>停止</button>
+        <button class="btn ghost" id="clearBtn" title="清空对话">清空</button>
+      </div>
+      <div class="meta-row">
+        <label class="rounds">轮数
+          <select id="roundsSelect">
+            <option value="3">3</option>
+            <option value="5" selected>5</option>
+            <option value="8">8</option>
+            <option value="12">12</option>
+          </select>
+        </label>
+        <button class="btn small" id="interjectBtn">旁白</button>
+        <button class="btn small" id="personaBtn" title="人设管理">人设</button>
+        <button class="btn small" id="canonBtn" title="一设数据库">一设</button>
+        <button class="btn small" id="settingsBtn">⚙ 设置</button>
+      </div>
+      <div class="interject-row" id="interjectRow" hidden>
+        <input id="interjectInput" type="text" maxlength="80" placeholder="加一句旁白，例如：忽然下起了雨…"
+               autocomplete="off">
+        <button class="btn" id="sendInterjectBtn">发送</button>
+        <button class="btn ghost small" id="cancelInterjectBtn">取消</button>
+      </div>
+      <div class="settings" id="settingsPanel" hidden>
+        <h3>AI 设置</h3>
+        <form id="settingsForm">
+          <div class="settings-grid">
+            <label>API Key
+              <input id="apiKeyInput" type="password" autocomplete="off" placeholder="sk-…（仅保存在本机浏览器）">
+            </label>
+            <label>接口地址
+              <input id="baseUrlInput" type="text" autocomplete="off" placeholder="https://api.openai.com/v1">
+            </label>
+            <label>模型
+              <div class="model-row" id="modelRow">
+                <input id="modelInput" type="text" autocomplete="off" placeholder="deepseek-chat">
+                <button class="btn small" id="fetchModelsBtn" type="button">自动获取</button>
+              </div>
+            </label>
+            <label>温度
+              <div class="temp-row">
+                <input id="tempInput" type="range" min="0" max="1.5" step="0.1" value="0.95">
+                <span id="tempValue">0.95</span>
+              </div>
+            </label>
+          </div>
+          <div class="api-extras">
+            <h4>总结 API 与自查 AI</h4>
+            <label>总结 API 模式
+              <select id="summaryModeSelect">
+                <option value="builtin">默认内置 API</option>
+                <option value="custom">自定义</option>
+              </select>
+            </label>
+            <div class="api-custom" id="summaryCustomRow" hidden>
+              <label>总结 API Key
+                <input id="summaryApiKeyInput" type="password" autocomplete="off" placeholder="sk-…">
+              </label>
+              <label>总结接口地址
+                <input id="summaryBaseUrlInput" type="text" autocomplete="off" placeholder="https://api.deepseek.com/v1">
+              </label>
+              <label>总结模型
+                <input id="summaryModelInput" type="text" autocomplete="off" placeholder="deepseek-chat">
+              </label>
+            </div>
+            <label>自查 AI（不配置则不进行自查）
+              <select id="checkModeSelect">
+                <option value="off">关闭</option>
+                <option value="on">开启</option>
+              </select>
+            </label>
+            <div class="api-custom" id="checkCustomRow" hidden>
+              <label>自查 API Key
+                <input id="checkApiKeyInput" type="password" autocomplete="off" placeholder="sk-…">
+              </label>
+              <label>自查接口地址
+                <input id="checkBaseUrlInput" type="text" autocomplete="off" placeholder="https://api.deepseek.com/v1">
+              </label>
+              <label>自查模型
+                <input id="checkModelInput" type="text" autocomplete="off" placeholder="deepseek-chat">
+              </label>
+            </div>
+            <p class="settings-hint">自查 AI 使用你自己的 API，开启后每次输出前会多一次检查调用；总结可单独配置，也可以直接用内置。</p>
+          </div>
+        </form>
+        <p class="settings-hint">
+          不填 Key 时自动使用内置台词演示；填了 Key 就由 AI 实时对话。
+          Key 只保存在浏览器本地、只发给本地服务器，不会写进日志。
+          接口兼容 OpenAI 格式的服务（DeepSeek、通义等）也能用。
+          「一设」是东方官方设定的参考资料，可自行修改（仅本机生效）；自动闲聊使用的一设由管理员在 config.json 中管理。
+          服务器开关（内置 AI、自动闲聊）与自动闲聊人设在 config.json 中直接修改，保存后自动生效。
+        </p>
+      </div>
+      <div class="persona-panel" id="personaPanel" hidden>
+        <div class="persona-head">
+          <h3>人设管理</h3>
+          <span class="persona-note">人设 = 基础设定 + 补充设定 + 系统提示词（自动组合）。基础设定与系统提示词不建议修改，补充设定自由发挥；只存在你自己的浏览器里。</span>
+          <button class="btn ghost small" id="personaCloseBtn" type="button">关闭</button>
+        </div>
+        <div class="persona-block">
+          <div class="persona-block-head">
+            <h4>灵梦</h4>
+            <span class="persona-tag public">可改 · 仅本机生效</span>
+          </div>
+          <label>基础设定 <span class="tag-warn">不建议修改</span>
+            <textarea id="personaBaseReimuInput" rows="4" maxlength="2000"></textarea>
+          </label>
+          <label>补充设定 <span class="tag-free">自由填写</span>
+            <textarea id="personaExtraReimuInput" rows="3" maxlength="2000"
+                      placeholder="补充你想要的设定，例如：她在魔理沙面前总是嘴硬心软……"></textarea>
+          </label>
+          <label>系统提示词 <span class="tag-warn">自动组合，不建议修改</span>
+            <textarea id="personaPromptReimuInput" rows="6" maxlength="3000" readonly></textarea>
+          </label>
+        </div>
+        <div class="persona-block">
+          <div class="persona-block-head">
+            <h4>魔理沙</h4>
+            <span class="persona-tag public">可改 · 仅本机生效</span>
+          </div>
+          <label>基础设定 <span class="tag-warn">不建议修改</span>
+            <textarea id="personaBaseMarisaInput" rows="4" maxlength="2000"></textarea>
+          </label>
+          <label>补充设定 <span class="tag-free">自由填写</span>
+            <textarea id="personaExtraMarisaInput" rows="3" maxlength="2000"
+                      placeholder="补充你想要的设定，例如：她总想拉着灵梦去看流星……"></textarea>
+          </label>
+          <label>系统提示词 <span class="tag-warn">自动组合，不建议修改</span>
+            <textarea id="personaPromptMarisaInput" rows="6" maxlength="3000" readonly></textarea>
+          </label>
+        </div>
+        <div class="persona-actions">
+          <button class="btn primary" id="personaSaveBtn" type="button">保存到本机</button>
+          <button class="btn ghost" id="personaResetBtn" type="button">恢复默认</button>
+        </div>
+      </div>
+      <div class="persona-panel" id="canonPanel" hidden>
+        <div class="persona-head">
+          <h3>一设数据库</h3>
+          <span class="persona-note">内容整理自 THBWiki（东方维基）并概括提取，供 AI 参考，避免角色崩坏。可自行修改，只存在你自己的浏览器里；手动对谈立即生效，自动闲聊使用管理员在 config.json 中配置的一设。</span>
+          <button class="btn ghost small" id="canonCloseBtn" type="button">关闭</button>
+        </div>
+        <div class="persona-block">
+          <div class="persona-block-head">
+            <h4>主角组一设</h4>
+            <span class="persona-tag public">可改 · 仅本机生效</span>
+          </div>
+          <label>灵梦的一设
+            <textarea id="canonReimuInput" rows="7" maxlength="4000"></textarea>
+          </label>
+          <label>魔理沙的一设
+            <textarea id="canonMarisaInput" rows="7" maxlength="4000"></textarea>
+          </label>
+          <label>世界观基础设定
+            <textarea id="canonWorldInput" rows="5" maxlength="3000"></textarea>
+          </label>
+          <label>主角组关系
+            <textarea id="canonPairInput" rows="5" maxlength="3000"></textarea>
+          </label>
+          <label>AI 易错提醒
+            <textarea id="canonNotesInput" rows="7" maxlength="4000"></textarea>
+          </label>
+        </div>
+        <div class="persona-actions">
+          <button class="btn primary" id="canonSaveBtn" type="button">保存到本机</button>
+          <button class="btn ghost" id="canonResetBtn" type="button">恢复默认</button>
+        </div>
+      </div>
+      </section>
+    </div>
+
+    <div class="view" id="autoView" hidden>
+      <section class="auto-panel" id="autoPanel" aria-label="自动闲聊">
+        <div class="auto-status">
+          <span class="auto-dot" id="autoDot"></span>
+          <span id="autoStatusText">自动闲聊：未开启</span>
+          <span class="topic-chip" id="topicChip" hidden></span>
+          <button class="btn small" id="topicPanelBtn" disabled>话题投票</button>
+        </div>
+        <div class="vote-panel" id="votePanel" hidden>
+          <div class="vote-list" id="voteList"></div>
+          <div class="vote-row">
+            <input id="topicProposalInput" type="text" maxlength="40" placeholder="提议一个话题，等大家投票…"
+                   autocomplete="off">
+            <button class="btn" id="proposeBtn">提议</button>
+          </div>
+          <p class="vote-hint">新话题先进候选池：攒够票数立即切换，否则每轮结束自动换票数最高的那个；没人提议时系统随机换题。</p>
+        </div>
+      </section>
+
+      <main class="chat">
+        <div class="chat-log" id="autoChatLog" role="log" aria-live="polite">
+          <div class="welcome" id="autoWelcome">
+            <p>自动闲聊未开启。</p>
+            <p>管理员在 config.json 里把 autoChatEnabled 设为 true 后，这里会直播两人的闲聊。</p>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <footer class="footer">
+      <p>灵感来自《东方Project》 · 页面仅供同人娱乐，非官方作品</p>
+      <p>立绘：dairi / はるか（伪黄昏绘） · 仅供学习交流，版权归原作者所有</p>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <div class="modal-overlay" id="aboutModal" hidden>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2>红白与黑白 · 使用说明</h2>
+        <button class="btn ghost small" id="aboutCloseBtn" type="button">关闭</button>
+      </div>
+      <div class="modal-body">
+        <p>欢迎来到主角组对谈站。这是一个让<strong>博丽灵梦</strong>和<strong>雾雨魔理沙</strong>用 AI 互相对话的同人小站，目前提供两种玩法。</p>
+
+        <h3>功能介绍</h3>
+        <ul>
+          <li><strong>手动对谈</strong>：设定一个话题（比如「今天的异变」「蘑菇收成」），两位主角轮流接话；对话中随时可以插一句<strong>旁白</strong>推进剧情，结束后点「继续对话」还能接着聊。</li>
+          <li><strong>自动闲聊</strong>：管理员开启后，两人会在独立界面里不停闲聊；观众可以提议话题并投票，票数攒够就换题，没人提议时系统也会随机换题。</li>
+          <li><strong>人设管理</strong>：手动对谈的人设人人都能改（只存在你自己的浏览器里），分为基础设定、补充设定和自动组合的系统提示词，默认是为主角组 CP 向打磨过的预设。</li>
+          <li><strong>一设数据库</strong>：内置东方官方设定参考（整理自 THBWiki），包括两人的一设、幻想乡世界观、主角组关系和 AI 易错提醒，帮助 AI 不崩人设；内容可以自己修改，仅本机生效。</li>
+          <li><strong>自查 AI（防 OOC）</strong>：在「设置」里填上自己的 API 后，每次输出前会多一次检查，台词不符合人设或一设时会自动润色；不配置就不启用。</li>
+          <li><strong>自动总结</strong>：对话积累到一定条数后，会自动把旧内容压缩成「前情提要」，既省 token 又能保持上下文连贯。</li>
+          <li><strong>演示模式</strong>：不接任何 API 也能玩，用内置台词演出，开箱即用。</li>
+        </ul>
+
+        <h3>关于内置 API（请务必看）</h3>
+        <p>网站默认使用<strong>作者自己的 DeepSeek API Key</strong> 驱动 AI，由服务器代为调用、不会下发到浏览器。但作者的 token 是<strong>有限的，跑完就没有了</strong>——如果哪天 AI 不回复或报「调用失败」，可能就是这个原因，请多包涵。</p>
+        <p>因此，<strong>如果你有能力，建议在页面「⚙ 设置」里填上自己的 API Key</strong>（兼容 OpenAI 格式的服务都可以，比如 DeepSeek、通义等），填了之后会优先使用你自己的 Key。Key 只保存在你的浏览器本地、只发给本地服务器，不会写进日志，也不会外传。</p>
+        <p>自查 AI 和总结 API 也都可以在设置里单独配置自己的 Key，自查 AI 默认不使用内置 API。</p>
+
+        <h3>后台管理说明</h3>
+        <p>服务器级开关（内置 AI、自动闲聊、自动闲聊人设、一设默认值等）由管理员在 <code>config.json</code> 里直接修改，保存后自动生效，前端不提供管理界面。如果你看到自动闲聊未开启，说明管理员还没有打开它。</p>
+
+        <h3>版权声明</h3>
+        <p>角色与世界观来自《东方Project》（ZUN），本页面为同人娱乐作品，并非官方出品。立绘使用 dairi / はるか 的仿黄昏绘（伪黄昏绘）作品裁出的头部特写，仅供学习交流，版权归原作者所有；如原作者要求，可随时替换。</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="demo.js?v=6"></script>
+  <script src="app.js?v=6"></script>
+</body>
+</html>
