@@ -68,6 +68,10 @@
     topicPanelBtn: $('topicPanelBtn'),
     votePanel: $('votePanel'),
     voteList: $('voteList'),
+    summaryPanelBtn: $('summaryPanelBtn'),
+    summaryPanel: $('summaryPanel'),
+    summaryCurrent: $('summaryCurrent'),
+    summaryList: $('summaryList'),
     topicProposalInput: $('topicProposalInput'),
     proposeBtn: $('proposeBtn'),
     manualTab: $('manualTab'),
@@ -99,7 +103,6 @@
   let viewerId = getViewerId();
   let mode = 'demo';
   let history = [];
-  let nextSpeaker = 'marisa';
   let pendingTurns = 0;
   let running = false;
   let busy = false;
@@ -107,6 +110,8 @@
   let interjectQueue = [];
   let manualTopic = '';
   let manualSummary = '';
+  let summaryData = { current: null, history: [] };
+  let editingSummaryId = null;
   let autoActive = false;
   let pollTimer = null;
   let lastAutoMsgId = 0;
@@ -122,7 +127,7 @@
         {
           apiKey: '',
           baseUrl: 'https://api.deepseek.com/v1',
-          model: 'deepseek-chat',
+          model: 'deepseek-v4-flash',
           temperature: 0.95,
           personaBaseReimu: '',
           personaExtraReimu: '',
@@ -148,7 +153,7 @@
       return {
         apiKey: '',
         baseUrl: 'https://api.deepseek.com/v1',
-        model: 'deepseek-chat',
+        model: 'deepseek-v4-flash',
         temperature: 0.95,
         personaBaseReimu: '',
         personaExtraReimu: '',
@@ -330,7 +335,6 @@
     history = [];
     manualTopic = '';
     manualSummary = '';
-    nextSpeaker = 'marisa';
     pendingTurns = 0;
     interjectQueue = [];
     els.chatLog.innerHTML = '';
@@ -555,6 +559,169 @@
     renderCandidates(data.candidates);
   }
 
+  // ---------- 总结历史 ----------
+  async function fetchSummaries() {
+    try {
+      const res = await fetch('/api/summaries', { cache: 'no-store' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || '读取总结失败');
+      summaryData = { current: data.current || null, history: data.history || [] };
+      renderSummaries();
+    } catch (err) {
+      toast(err.message || '读取总结失败');
+    }
+  }
+
+  function renderSummaries() {
+    renderCurrentSummary();
+    renderSummaryList();
+  }
+
+  function renderCurrentSummary() {
+    const box = els.summaryCurrent;
+    box.innerHTML = '';
+    const h = document.createElement('h4');
+    h.textContent = '当前总结';
+    box.appendChild(h);
+
+    if (!summaryData.current) {
+      const p = document.createElement('div');
+      p.className = 'empty-votes';
+      p.textContent = '暂无当前总结（自动闲聊积累到一定条数后会自动生成）。';
+      box.appendChild(p);
+      return;
+    }
+
+    const topic = document.createElement('div');
+    topic.className = 'vote-hint';
+    topic.textContent = '话题：' + (summaryData.current.topic || '自动闲聊');
+    box.appendChild(topic);
+
+    const ta = document.createElement('textarea');
+    ta.value = summaryData.current.content || '';
+    box.appendChild(ta);
+
+    const save = document.createElement('button');
+    save.className = 'btn small';
+    save.type = 'button';
+    save.textContent = '保存当前总结';
+    save.addEventListener('click', async () => {
+      await updateSummary(summaryData.current.id, ta.value);
+    });
+    box.appendChild(save);
+  }
+
+  function renderSummaryList() {
+    const list = els.summaryList;
+    list.innerHTML = '';
+    const items = summaryData.history || [];
+    if (!items.length) {
+      const p = document.createElement('div');
+      p.className = 'empty-votes';
+      p.textContent = '还没有历史总结。';
+      list.appendChild(p);
+      return;
+    }
+
+    for (const s of items) {
+      const item = document.createElement('div');
+      item.className = 'vote-item summary-item';
+
+      const head = document.createElement('div');
+      head.className = 'summary-item-head';
+
+      const label = document.createElement('span');
+      label.className = 'vote-text';
+      const isCurrent = summaryData.current && summaryData.current.id === s.id;
+      const time = new Date(s.createdAt).toLocaleString('zh-CN', { hour12: false });
+      label.textContent = (isCurrent ? '【当前】' : '') + (s.topic || '自动闲聊') + ' · ' + time;
+      head.appendChild(label);
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'vote-btn';
+      editBtn.type = 'button';
+      editBtn.textContent = '编辑';
+      editBtn.addEventListener('click', () => {
+        editingSummaryId = s.id;
+        renderSummaryList();
+      });
+      head.appendChild(editBtn);
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'vote-btn danger';
+      delBtn.type = 'button';
+      delBtn.textContent = '删除';
+      delBtn.addEventListener('click', async () => {
+        if (!confirm('确定删除这条总结？')) return;
+        await deleteSummary(s.id);
+      });
+      head.appendChild(delBtn);
+      item.appendChild(head);
+
+      if (editingSummaryId === s.id) {
+        const ta = document.createElement('textarea');
+        ta.value = s.content || '';
+        item.appendChild(ta);
+
+        const save = document.createElement('button');
+        save.className = 'btn small';
+        save.type = 'button';
+        save.textContent = '保存';
+        save.addEventListener('click', async () => {
+          await updateSummary(s.id, ta.value);
+          editingSummaryId = null;
+        });
+        item.appendChild(save);
+
+        const cancel = document.createElement('button');
+        cancel.className = 'btn small ghost';
+        cancel.type = 'button';
+        cancel.textContent = '取消';
+        cancel.addEventListener('click', () => {
+          editingSummaryId = null;
+          renderSummaryList();
+        });
+        item.appendChild(cancel);
+      } else {
+        const content = document.createElement('div');
+        content.className = 'summary-content';
+        content.textContent = s.content || '';
+        item.appendChild(content);
+      }
+
+      list.appendChild(item);
+    }
+  }
+
+  async function updateSummary(id, content) {
+    const res = await fetch('/api/summaries/' + encodeURIComponent(id), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      toast(data.error || '保存失败');
+      return;
+    }
+    summaryData = { current: data.current || null, history: data.history || [] };
+    renderSummaries();
+    toast('总结已保存');
+  }
+
+  async function deleteSummary(id) {
+    const res = await fetch('/api/summaries/' + encodeURIComponent(id), { method: 'DELETE' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      toast(data.error || '删除失败');
+      return;
+    }
+    summaryData = { current: data.current || null, history: data.history || [] };
+    if (editingSummaryId === id) editingSummaryId = null;
+    renderSummaries();
+    toast('总结已删除');
+  }
+
   // ---------- 人设管理（手动对谈，人人可改，仅存本机） ----------
   function closePersonaPanel() {
     els.personaPanel.hidden = true;
@@ -662,7 +829,15 @@
     }
   }
 
+  function canonCustomized() {
+    return ['Reimu', 'Marisa', 'World', 'Pair', 'Notes'].some((k) => {
+      const v = settings['canon' + k];
+      return !!v && v.trim();
+    });
+  }
+
   function assembleCanon() {
+    if (!canonCustomized()) return '';
     const d = window.__canonDefaults;
     if (!d || !d.defaults) return '';
     const get = (key, defKey) => {
@@ -711,21 +886,36 @@
   }
 
   // ---------- 手动对谈 ----------
-  function other(speaker) {
-    return speaker === 'reimu' ? 'marisa' : 'reimu';
+  function nextCharacterSpeaker() {
+    for (let i = history.length - 1; i >= 0; i--) {
+      const s = history[i].speaker;
+      if (s === 'reimu' || s === 'marisa') {
+        return s === 'marisa' ? 'reimu' : 'marisa';
+      }
+    }
+    return 'marisa';
   }
 
-  function takeSpeaker() {
-    const s = nextSpeaker;
-    nextSpeaker = other(s);
-    return s;
+  function sleepMs(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  async function renderReply(speaker, text) {
+    if (!text || stopRequested) return false;
+    const typingRow = appendTyping(speaker);
+    await sleepMs(500 + Math.random() * 500);
+    removeTyping(typingRow);
+    if (stopRequested) return false;
+    appendMessage(speaker, text);
+    history.push({ speaker, text });
+    await maybeSummarizeManual();
+    return true;
   }
 
   async function speak(speaker) {
     if (stopRequested) return null;
     busy = true;
     syncControls();
-    const typingRow = appendTyping(speaker);
     let text = '';
     try {
       if (mode === 'ai') {
@@ -734,9 +924,8 @@
         text = await demoReply(speaker);
       }
     } catch (err) {
-      removeTyping(typingRow);
       const msg = err.message || '';
-      if (msg.includes('管理员已关闭')) {
+      if (msg.includes('管理员关闭')) {
         mode = 'demo';
         updateModeBadge();
         toast('内置 AI 已关闭，本次对话使用演示台词');
@@ -749,18 +938,40 @@
         return null;
       }
     }
-    removeTyping(typingRow);
-    if (!text) {
-      busy = false;
-      syncControls();
-      return null;
-    }
-    appendMessage(speaker, text);
-    history.push({ speaker, text });
-    await maybeSummarizeManual();
+    const ok = await renderReply(speaker, text);
     busy = false;
     syncControls();
-    return text;
+    return ok ? text : null;
+  }
+
+  async function askBatch(speaker, count) {
+    const res = await fetch('/api/chat/batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        character: speaker,
+        topic: manualTopic || '随便聊聊',
+        history,
+        turns: count,
+        apiKey: settings.apiKey || undefined,
+        baseUrl: settings.baseUrl,
+        model: settings.model,
+        temperature: settings.temperature,
+        personas: { reimu: assemblePersona('reimu'), marisa: assemblePersona('marisa') },
+        summary: manualSummary || undefined,
+        canon: assembleCanon(),
+        canonMode: canonCustomized() ? 'custom' : 'default',
+        checkEnabled: settings.checkMode === 'on' && !!settings.checkApiKey,
+        checkApiKey: settings.checkMode === 'on' ? settings.checkApiKey : undefined,
+        checkBaseUrl: settings.checkMode === 'on' ? settings.checkBaseUrl : undefined,
+        checkModel: settings.checkMode === 'on' ? settings.checkModel : undefined
+      })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error || `请求失败：${res.status}`);
+    }
+    return Array.isArray(data.replies) ? data.replies : [];
   }
 
   async function askAI(speaker) {
@@ -778,6 +989,7 @@
         persona: assemblePersona(speaker),
         summary: manualSummary || undefined,
         canon: assembleCanon(),
+        canonMode: canonCustomized() ? 'custom' : 'default',
         checkEnabled: settings.checkMode === 'on' && !!settings.checkApiKey,
         checkApiKey: settings.checkMode === 'on' ? settings.checkApiKey : undefined,
         checkBaseUrl: settings.checkMode === 'on' ? settings.checkBaseUrl : undefined,
@@ -931,7 +1143,7 @@
     input.id = 'modelInput';
     input.type = 'text';
     input.autocomplete = 'off';
-    input.placeholder = 'deepseek-chat';
+    input.placeholder = 'deepseek-v4-flash';
     input.value = settings.model || '';
     input.addEventListener('input', () => {
       settings.model = input.value.trim();
@@ -968,7 +1180,6 @@
       manualTopic = els.topicInput.value.trim();
       manualSummary = '';
       history = [];
-      nextSpeaker = 'marisa';
       demoEngine.reset();
       els.chatLog.innerHTML = '';
       if (manualTopic) {
@@ -977,19 +1188,45 @@
     } else if (els.topicInput.value.trim()) {
       manualTopic = els.topicInput.value.trim();
     }
-    pendingTurns = Number(els.roundsSelect.value) * 2;
+    const total = Number(els.roundsSelect.value) * 2;
+    pendingTurns = total;
     interjectQueue = [];
     running = true;
     syncControls();
     if (continuing) toast('继续上一段对话');
 
-    while (running && pendingTurns > 0 && !stopRequested) {
-      const speaker = takeSpeaker();
-      const replied = await speak(speaker);
-      if (!replied) break;
-      pendingTurns--;
-      await drainInterjections();
+    const speaker = nextCharacterSpeaker();
+    let replies = [];
+    if (mode === 'ai') {
+      try {
+        replies = await askBatch(speaker, total);
+      } catch (err) {
+        const msg = err.message || '';
+        if (msg.includes('管理员关闭')) {
+          mode = 'demo';
+          updateModeBadge();
+          toast('内置 AI 已关闭，本次对话使用演示台词');
+        } else {
+          toast(msg || '出错了，请重试');
+          stopRequested = true;
+        }
+      }
     }
+    if (!replies.length && mode === 'demo') {
+      let sp = speaker;
+      for (let i = 0; i < total && !stopRequested; i++) {
+        const text = await demoReply(sp);
+        if (text) replies.push({ speaker: sp, text });
+        sp = sp === 'marisa' ? 'reimu' : 'marisa';
+      }
+    }
+    for (const item of replies) {
+      if (stopRequested || !running) break;
+      const ok = await renderReply(item.speaker, item.text);
+      if (!ok) break;
+      pendingTurns--;
+    }
+    await drainInterjections();
     running = false;
     busy = false;
     syncControls();
@@ -1011,7 +1248,7 @@
     } else {
       appendNarration(text);
       history.push({ speaker: 'user', text });
-      speak(takeSpeaker()).then(() => drainInterjections()).then(() => syncControls());
+      speak(nextCharacterSpeaker()).then(() => drainInterjections()).then(() => syncControls());
     }
   }
 
@@ -1020,7 +1257,7 @@
       const text = interjectQueue.shift();
       appendNarration(text);
       history.push({ speaker: 'user', text });
-      await speak(takeSpeaker());
+      await speak(nextCharacterSpeaker());
     }
   }
 
@@ -1162,6 +1399,12 @@
     els.topicPanelBtn.addEventListener('click', () => {
       els.votePanel.hidden = !els.votePanel.hidden;
       els.topicPanelBtn.textContent = els.votePanel.hidden ? '话题投票' : '收起投票';
+    });
+    els.summaryPanelBtn.addEventListener('click', () => {
+      els.summaryPanel.hidden = !els.summaryPanel.hidden;
+      if (!els.summaryPanel.hidden) {
+        fetchSummaries();
+      }
     });
     els.proposeBtn.addEventListener('click', proposeTopic);
     els.topicProposalInput.addEventListener('keydown', (e) => {

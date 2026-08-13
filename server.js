@@ -7,6 +7,7 @@ const demo = require('./public/demo');
 const PORT = Number(process.env.PORT) || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const CONFIG_FILE = path.join(__dirname, 'config.json');
+const SUMMARY_FILE = path.join(__dirname, 'summary_history.json');
 const AUTO_INTERVAL_MS = 7000;
 const AUTO_INTERVAL_JITTER_MS = 3500;
 
@@ -16,14 +17,14 @@ const DEFAULT_REIMU_BASE = `你是博丽灵梦，东方Project的主角之一，
 你最大的爱好是喝茶、晒太阳和收香油钱（纳奉），最讨厌被拉去干活，也最讨厌魔理沙把魔法实验炸得到处都是（但你喜欢她眼睛发亮讲新发现时的样子）。`;
 
 const DEFAULT_REIMU_RULES = `说话风格：慵懒随意、带点嫌弃，面对魔理沙时嘴硬心软、不自觉地温柔一点；用简体中文，句尾偶尔带“啊”“嘛”“真是的”。
-禁止事项：不要提到自己是AI或模型，不要使用引号包裹台词，不要长篇大论，每次只回复1~3句话，不要用“（笑）”之类的剧本说明。`;
+禁止事项：不要提到自己是AI或模型，不要使用引号包裹台词，不要长篇大论，每次只回复1~3句话，不要用“（笑）”之类的剧本说明；称呼魔理沙时直接用「魔理沙」，不要叫她「黑白」。`;
 
 const DEFAULT_MARISA_BASE = `你是雾雨魔理沙，东方Project的主角之一，自称“普通的女孩子”的魔法使。你有着金色长发，戴着黑白相间的女巫帽，性格活泼开朗、我行我素、好奇心旺盛。
 你和灵梦是相识多年的主角组搭档，也是彼此最特别的人。你最喜欢往博丽神社跑，嘴上说是去蹭茶找乐子，其实每次出门第一个想去的地方就是神社；看到灵梦懒洋洋坐在廊下的样子，你就会忍不住笑。
 你最喜欢收集各种东西：蘑菇、魔法书、稀奇古怪的道具，也喜欢研究魔法和发明；研究出新东西总想第一个拿给灵梦看，被她吐槽两句反而更来劲。`;
 
 const DEFAULT_MARISA_RULES = `说话风格：元气满满、直来直去，面对灵梦时带着藏不住的亲近和得意，语尾偶尔带“ze～”“的说”等口癖，用简体中文，偶尔冒出一点魔法术语。
-禁止事项：不要提到自己是AI或模型，不要使用引号包裹台词，不要长篇大论，每次只回复1~3句话，不要用“（笑）”之类的剧本说明。`;
+禁止事项：不要提到自己是AI或模型，不要使用引号包裹台词，不要长篇大论，每次只回复1~3句话，不要用“（笑）”之类的剧本说明；称呼灵梦时直接用「灵梦」，不要叫她「红白」。`;
 
 const DEFAULT_REIMU_PERSONA = DEFAULT_REIMU_BASE + '\n' + DEFAULT_REIMU_RULES;
 const DEFAULT_MARISA_PERSONA = DEFAULT_MARISA_BASE + '\n' + DEFAULT_MARISA_RULES;
@@ -69,7 +70,7 @@ const DEFAULT_CANON_PAIR = `灵梦与魔理沙是东方Project的两位主角，
 const DEFAULT_CANON_NOTES = `1. 一设与二创：灵梦「贫穷到吃土、无节操」是二次创作的夸张形象；一设里她只是贪财、忠于欲望。可以玩香油钱梗，但不要把她写成乞丐或唯利是图到没底线。
 2. 魔理沙是人类魔法使，不是妖怪、不是吸血鬼、不是魔法少女；她「偷东西」主要是借/偷书，说话行事堂堂正正。
 3. 两人是平等的搭档兼损友：魔理沙去神社是找灵梦玩，不是打工、不是侍从；灵梦也没有雇佣她。
-4. 称呼与配色：灵梦=「红白」，魔理沙=「黑白」；灵梦的武器是驱魔棒、阴阳玉、符咒（不是御币），魔理沙的武器是迷你八卦炉、魔法扫帚。
+4. 称呼：两人互相称呼直接用「灵梦」「魔理沙」；不要把灵梦叫成「红白」、把魔理沙叫成「黑白」（这些只是外号，不是日常称呼）。灵梦的武器是驱魔棒、阴阳玉、符咒（不是御币），魔理沙的武器是迷你八卦炉、魔法扫帚。
 5. 魔理沙口癖是「ze～（だぜ）」，灵梦说话慵懒随意；两人都用简体中文，不要突然冒出现代网络梗、现实地名或其他作品的角色。
 6. 世界观细节：幻想乡是与外界隔绝的秘境；「异变」是常见事件；符卡规则下的弹幕战是华丽对决而非生死厮杀；灵梦是巫女、守护大结界，但不会整天把「结界」挂在嘴边说教。
 7. 人物观感：两人都是少女外观（官方未给出具体年龄）；灵梦关键时刻非常可靠，魔理沙是背后默默努力的努力家——不要写成软弱或只会耍宝的形象。
@@ -103,7 +104,9 @@ function applyEnvOverrides(cfg) {
   if (process.env.AI_ENABLED !== undefined) cfg.aiEnabled = process.env.AI_ENABLED !== 'false';
   if (process.env.AUTO_CHAT_ENABLED !== undefined) cfg.autoChatEnabled = process.env.AUTO_CHAT_ENABLED === 'true';
   if (process.env.CANON_ENABLED !== undefined) cfg.canonEnabled = process.env.CANON_ENABLED !== 'false';
+  if (process.env.CANON_SMART !== undefined) cfg.canonSmart = process.env.CANON_SMART !== 'false';
   if (process.env.RATE_LIMIT_PER_MIN !== undefined) cfg.rateLimitPerMin = Number(process.env.RATE_LIMIT_PER_MIN) || 0;
+  if (process.env.AUTO_BATCH_SIZE !== undefined) cfg.autoBatchSize = Math.min(24, Math.max(2, Number(process.env.AUTO_BATCH_SIZE) || 24));
   return cfg;
 }
 
@@ -126,6 +129,10 @@ function normalizeConfig(cfg) {
   if (cfg.summaryKeepRecent === undefined || cfg.summaryKeepRecent === null || Number.isNaN(Number(cfg.summaryKeepRecent))) {
     cfg.summaryKeepRecent = 6;
   }
+  cfg.sleepStartHour = Number(cfg.sleepStartHour ?? 1);
+  cfg.sleepEndHour = Number(cfg.sleepEndHour ?? 7);
+  if (Number.isNaN(cfg.sleepStartHour)) cfg.sleepStartHour = 1;
+  if (Number.isNaN(cfg.sleepEndHour)) cfg.sleepEndHour = 7;
   return cfg;
 }
 
@@ -134,7 +141,7 @@ function loadConfig() {
     deepseekApiKey: process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY || '',
     adminToken: crypto.randomBytes(6).toString('hex'),
     baseUrl: 'https://api.deepseek.com/v1',
-    model: 'deepseek-chat',
+    model: 'deepseek-v4-flash',
     personaReimu: DEFAULT_REIMU_PERSONA,
     personaMarisa: DEFAULT_MARISA_PERSONA,
     autoPersonaReimu: DEFAULT_REIMU_PERSONA,
@@ -145,6 +152,7 @@ function loadConfig() {
     canonPair: DEFAULT_CANON_PAIR,
     canonAiNotes: DEFAULT_CANON_NOTES,
     canonEnabled: true,
+    canonSmart: true,
     aiEnabled: true,
     autoChatEnabled: false,
     topicRoundSec: 180,
@@ -153,7 +161,10 @@ function loadConfig() {
     proposalCooldownSec: 30,
     summarizeAfter: 20,
     summaryKeepRecent: 6,
-    rateLimitPerMin: 20
+    autoBatchSize: 24,
+    rateLimitPerMin: 20,
+    sleepStartHour: 1,
+    sleepEndHour: 7
   };
   try {
     if (fs.existsSync(CONFIG_FILE)) {
@@ -194,7 +205,7 @@ function applyConfigFromDisk() {
       adminToken: config.adminToken,
       deepseekApiKey: process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY || config.deepseekApiKey,
       baseUrl: 'https://api.deepseek.com/v1',
-      model: 'deepseek-chat',
+      model: 'deepseek-v4-flash',
       personaReimu: DEFAULT_REIMU_PERSONA,
       personaMarisa: DEFAULT_MARISA_PERSONA,
       autoPersonaReimu: DEFAULT_REIMU_PERSONA,
@@ -205,6 +216,7 @@ function applyConfigFromDisk() {
       canonPair: DEFAULT_CANON_PAIR,
       canonAiNotes: DEFAULT_CANON_NOTES,
       canonEnabled: true,
+      canonSmart: true,
       aiEnabled: true,
       autoChatEnabled: false,
       topicRoundSec: 180,
@@ -213,7 +225,10 @@ function applyConfigFromDisk() {
       proposalCooldownSec: 30,
       summarizeAfter: 20,
       summaryKeepRecent: 6,
-      rateLimitPerMin: 20
+      autoBatchSize: 24,
+      rateLimitPerMin: 20,
+      sleepStartHour: 1,
+      sleepEndHour: 7
     };
     normalizeConfig(applyEnvOverrides(Object.assign(config, diskDefaults, disk)));
     if (config.autoChatEnabled && !wasAuto) startAutoChat();
@@ -235,12 +250,45 @@ const state = {
   topicStartTs: 0,
   aiHistory: [],
   autoSummary: null,
+  summaryHistory: [],
+  currentSummary: null,
   consecutiveErrors: 0,
   autoTimer: null,
+  autoQueue: [],
+  sleeping: false,
+  topicTransition: false,
   nextId: 1
 };
 
 const demoEngine = demo.createEngine();
+
+function newSummaryId() {
+  return crypto.randomBytes(6).toString('hex');
+}
+
+function loadSummaryHistory() {
+  try {
+    if (fs.existsSync(SUMMARY_FILE)) {
+      const arr = JSON.parse(fs.readFileSync(SUMMARY_FILE, 'utf8'));
+      if (Array.isArray(arr)) {
+        state.summaryHistory = arr
+          .filter((x) => x && typeof x.content === 'string' && x.content.trim())
+          .slice(0, 50);
+      }
+    }
+  } catch (err) {
+    console.error('读取总结历史失败：', err.message);
+  }
+}
+
+function saveSummaryHistory() {
+  try {
+    fs.writeFileSync(SUMMARY_FILE, JSON.stringify(state.summaryHistory, null, 2), 'utf8');
+  } catch (err) {
+    console.error('保存总结历史失败：', err.message);
+  }
+}
+loadSummaryHistory();
 
 function pushLog(type, text) {
   const entry = { id: state.nextId++, type, text, ts: Date.now() };
@@ -257,6 +305,26 @@ function lastSpeaker() {
   return null;
 }
 
+function timePeriodLabel(d = new Date()) {
+  const h = d.getHours();
+  if (h >= 5 && h < 8) return '清晨';
+  if (h >= 8 && h < 11) return '上午';
+  if (h >= 11 && h < 14) return '中午';
+  if (h >= 14 && h < 17) return '下午';
+  if (h >= 17 && h < 20) return '傍晚';
+  if (h >= 20 && h < 23) return '晚上';
+  return '深夜';
+}
+
+function isSleepingTime(d = new Date()) {
+  const start = Number(config.sleepStartHour);
+  const end = Number(config.sleepEndHour);
+  const h = d.getHours();
+  if (Number.isNaN(start) || Number.isNaN(end) || start === end) return false;
+  if (start < end) return h >= start && h < end;
+  return h >= start || h < end;
+}
+
 // ---------- 话题 ----------
 function pickRandomTopic() {
   const pool = demo.TOPIC_POOL.filter((t) => t !== state.currentTopic);
@@ -264,21 +332,44 @@ function pickRandomTopic() {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-function rotateTopic() {
+async function pickRelatedTopic() {
+  if (!aiUsable()) return pickRandomTopic();
+  const recent = state.aiHistory
+    .slice(-8)
+    .map((m) => `${speakerName(m.speaker)}：${m.text}`)
+    .join('\n');
+  const prompt = [
+    { role: 'system', content: '你是东方Project同人对话的编剧。请根据两人最近的对话，给出一个 3~12 字的新话题，让她们接下来很自然地继续聊下去。新话题必须和刚才聊的内容相关，不要突兀；只输出话题本身，不要加引号、标点或解释。' },
+    { role: 'user', content: `最近对话：\n${recent || '（无）'}` }
+  ];
+  try {
+    const raw = await callAI(config.deepseekApiKey, config.baseUrl, config.model, prompt, 0.85, 300);
+    let topic = cleanDialogueLine(raw).replace(/[。！？，、；：\s]/g, '');
+    topic = topic.replace(/^["'“”‘’「」]+|["'“”‘’「」]+$/g, '').trim();
+    if (topic.length >= 2 && topic.length <= 16 && topic !== state.currentTopic) return topic;
+  } catch (err) {
+    console.error('生成相关话题失败：', err.message);
+  }
+  return pickRandomTopic();
+}
+
+async function rotateTopic() {
   let next = null;
   if (state.candidates.length) {
     const sorted = [...state.candidates].sort((a, b) => b.votes.size - a.votes.size);
     if (sorted[0].votes.size > 0) next = sorted[0].text;
   }
-  if (!next && Math.random() < 0.4) next = pickRandomTopic();
+  if (!next && Math.random() < 0.4) next = await pickRelatedTopic();
   if (!next) return false;
   state.currentTopic = next;
   state.topicStartTs = Date.now();
   state.candidates = [];
-  state.aiHistory = [];
+  state.aiHistory = state.aiHistory.slice(-4);
   state.autoSummary = null;
+  state.autoQueue = [];
+  state.topicTransition = true;
   demoEngine.reset();
-  pushLog('system', `（话题切换为「${next}」）`);
+  pushLog('system', `（聊着聊着，两人自然地说起了「${next}」）`);
   return true;
 }
 
@@ -290,22 +381,42 @@ function speakerName(speaker) {
   return '灵梦';
 }
 
-function buildCanonText(character) {
+const CANON_WORLD_KEYWORDS = [
+  '红魔馆', '守矢神社', '雾之湖', '妖怪之山', '人间之里', '博丽神社',
+  '魔法森林', '香霖堂', '迷途竹林', '永远亭', '月都', '天界', '地狱',
+  '异变', '结界', '符卡', '宴会', '例大祭', '赛钱', '退治', '幻想乡'
+];
+
+function canonNeedsWorld(text) {
+  const hay = String(text || '').toLowerCase();
+  return CANON_WORLD_KEYWORDS.some((kw) => hay.includes(kw.toLowerCase()));
+}
+
+function canonTextFor({ character, topic, history, custom }) {
+  if (custom) return String(custom || '').trim();
+  if (config.canonEnabled === false) return '';
   const parts = [];
   const reimu = config.canonReimu;
   const marisa = config.canonMarisa;
-  if (character === 'marisa') {
-    if (marisa) parts.push(`【雾雨魔理沙 · 一设】\n${marisa}`);
-    if (reimu) parts.push(`【博丽灵梦 · 一设】\n${reimu}`);
+  const speakerFirst = character === 'marisa';
+  if (speakerFirst) {
+    if (marisa) parts.push(`【魔理沙·一设】\n${marisa}`);
+    if (reimu) parts.push(`【灵梦·一设】\n${reimu}`);
   } else {
-    if (reimu) parts.push(`【博丽灵梦 · 一设】\n${reimu}`);
-    if (marisa) parts.push(`【雾雨魔理沙 · 一设】\n${marisa}`);
+    if (reimu) parts.push(`【灵梦·一设】\n${reimu}`);
+    if (marisa) parts.push(`【魔理沙·一设】\n${marisa}`);
   }
-  if (config.canonWorld) parts.push(`【幻想乡 · 基础世界观】\n${config.canonWorld}`);
-  if (config.canonPair) parts.push(`【主角组 · 两人关系】\n${config.canonPair}`);
-  if (config.canonAiNotes) parts.push(`【AI 易错提醒】\n${config.canonAiNotes}`);
+  if (config.canonPair) parts.push(`【两人关系】\n${config.canonPair}`);
+  if (config.canonAiNotes) parts.push(`【易错提醒】\n${config.canonAiNotes}`);
+  const smart = config.canonSmart !== false;
+  const contextText = `${topic || ''}\n${(history || []).map((m) => m && m.text).filter(Boolean).join('\n')}`;
+  if (config.canonWorld && (!smart || canonNeedsWorld(contextText))) {
+    parts.push(`【世界观】\n${config.canonWorld}`);
+  }
   return parts.join('\n\n');
 }
+
+
 
 function buildMessages({ character, topic, history = [], persona, summary, canon }) {
   const isMarisa = character === 'marisa';
@@ -328,7 +439,7 @@ function buildMessages({ character, topic, history = [], persona, summary, canon
     role: 'system',
     content:
       `当前场景：你正在幻想乡和对方闲聊。话题背景：${topic || '随便聊聊'}\n` +
-      `对话规则：顺着对方的上一句话自然地接下去，可以吐槽、跑题或斗嘴，但必须保持角色性格；每次只说1~3句话；不要提剧本、不要解释、不要跳出角色。\n` +
+      `对话规则：顺着对方的上一句话自然地接下去，可以吐槽、跑题或斗嘴，但必须保持角色性格；每次只说1~3句话；不要重复上文中已经说过的话，也不要复述对方的原句；不要提剧本、不要解释、不要跳出角色。\n` +
       `注意：对话中出现的「旁白」是场景描述或剧情事件，请自然地回应它，不要评价旁白本身。`
   });
   for (const item of history) {
@@ -349,20 +460,46 @@ function cleanReply(text) {
     .trim();
 }
 
-async function callAI(apiKey, baseUrl, model, messages, temperature) {
+function cleanDialogueLine(text) {
+  let s = cleanReply(text);
+  s = s.replace(/^(?:灵梦|魔理沙|旁白)\s*[:：]\s*/, '');
+  s = s.replace(/^[-*•·]\s*/, '');
+  s = s.replace(/^\d+[.、．]\s*/, '');
+  return s.trim();
+}
+
+function normalizeForCompare(text) {
+  return String(text || '').replace(/\s+/g, '').toLowerCase();
+}
+
+function dedupeLines(lines, recentTexts) {
+  const seen = new Set((recentTexts || []).map(normalizeForCompare));
+  const out = [];
+  for (const line of lines) {
+    const key = normalizeForCompare(line);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(line);
+  }
+  return out.length ? out : lines.slice(0);
+}
+
+async function callAI(apiKey, baseUrl, model, messages, temperature, maxTokens = 300, jsonObject = false) {
   const url = String(baseUrl || config.baseUrl).replace(/\/+$/, '') + '/chat/completions';
+  const payload = {
+    model: model || config.model,
+    messages,
+    temperature: typeof temperature === 'number' ? temperature : 0.95,
+    max_tokens: maxTokens
+  };
+  if (jsonObject) payload.response_format = { type: 'json_object' };
   const resp = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`
     },
-    body: JSON.stringify({
-      model: model || config.model,
-      messages,
-      temperature: typeof temperature === 'number' ? temperature : 0.95,
-      max_tokens: 300
-    })
+    body: JSON.stringify(payload)
   });
   if (!resp.ok) {
     let detail = '';
@@ -375,6 +512,40 @@ async function callAI(apiKey, baseUrl, model, messages, temperature) {
   const reply = data.choices?.[0]?.message?.content ?? '';
   if (!reply.trim()) throw new Error('AI 返回了空内容，请重试');
   return cleanReply(reply);
+}
+
+let jsonModeUnsupported = false;
+async function callBatchAI(apiKey, baseUrl, model, messages, temperature, maxTokens) {
+  if (!jsonModeUnsupported) {
+    try {
+      return await callAI(apiKey, baseUrl, model, messages, temperature, maxTokens, true);
+    } catch (err) {
+      const msg = String((err && err.message) || '');
+      if (/response_format|json_object|json mode/i.test(msg)) {
+        jsonModeUnsupported = true;
+        console.warn('当前接口不支持 JSON 结构化输出，已退回普通模式');
+      } else {
+        throw err;
+      }
+    }
+  }
+  return callAI(apiKey, baseUrl, model, messages, temperature, maxTokens, false);
+}
+
+// 统一解析“用哪个 Key / 用哪个接口地址”。
+// 关键安全约束：如果请求指定了自定义 baseUrl，但没带自己的 apiKey，
+// 绝不能用服务器的内置 Key 去请求第三方地址（否则等于把内置 Key 外发）。
+function resolveAiEndpoint({ apiKey, baseUrl, missingKeyMsg }) {
+  const effectiveBase = String(baseUrl || config.baseUrl || '').replace(/\/+$/, '');
+  const serverBase = String(config.baseUrl || '').replace(/\/+$/, '');
+  const key = apiKey || (config.aiEnabled ? config.deepseekApiKey : '');
+  if (!key) {
+    return { error: missingKeyMsg || '还没有配置 AI Key。' };
+  }
+  if (!apiKey && effectiveBase !== serverBase) {
+    return { error: '使用自定义接口地址时，请同时填写你自己的 API Key；服务器内置 Key 不会发送到第三方地址。' };
+  }
+  return { key, baseUrl: effectiveBase };
 }
 
 async function selfCheckReply({ persona, topic, history, reply, check, canon }) {
@@ -412,9 +583,125 @@ async function generateAutoMessage(speaker) {
     history: state.aiHistory.slice(-20),
     persona: speaker === 'marisa' ? config.autoPersonaMarisa : config.autoPersonaReimu,
     summary: state.autoSummary || undefined,
-    canon: config.canonEnabled !== false ? buildCanonText(speaker) : ''
+    canon: canonTextFor({
+      character: speaker,
+      topic: state.currentTopic || '',
+      history: state.aiHistory.slice(-12)
+    })
   });
   return callAI(config.deepseekApiKey, config.baseUrl, config.model, messages, 0.95);
+}
+
+function parseBatchReply(raw, count) {
+  let text = String(raw || '').trim();
+  const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (fence) text = fence[1].trim();
+
+  const toLines = (arr) =>
+    arr
+      .map((x) => cleanReply(typeof x === 'string' ? x : (x && (x.text || x.content)) || ''))
+      .filter(Boolean);
+
+  const tryExtract = (s) => {
+    try {
+      const v = JSON.parse(s);
+      if (Array.isArray(v)) return v;
+      if (v && Array.isArray(v.lines)) return v.lines;
+      if (v && Array.isArray(v.replies)) return v.replies;
+      return null;
+    } catch (_) {
+      return null;
+    }
+  };
+
+  // 兼容全角逗号当分隔符、以及 {"lines":[...]} 这类对象包装
+  const normalized = text.replace(/"，/g, '",');
+  let arr = tryExtract(normalized);
+  if (!arr) {
+    const start = normalized.indexOf('[');
+    const end = normalized.lastIndexOf(']');
+    if (start !== -1) {
+      arr = tryExtract(end > start ? normalized.slice(start, end + 1) : normalized.slice(start));
+    }
+  }
+
+  let lines = arr ? toLines(arr) : [];
+
+  // 兜底：截断或仍不合法时，抓取所有成对引号包裹的台词
+  if (!lines.length) {
+    const start = text.indexOf('[');
+    const end = text.lastIndexOf(']');
+    const region = start !== -1
+      ? (end > start ? text.slice(start + 1, end) : text.slice(start + 1))
+      : text;
+    const matches = [
+      ...region.matchAll(/"((?:[^"\\]|\\.)*)"/g),
+      ...region.matchAll(/'((?:[^'\\]|\\.)*)'/g),
+      ...region.matchAll(/“([^“”]*)”/g),
+      ...region.matchAll(/「([^「」]*)」/g)
+    ];
+    if (matches.length) {
+      lines = matches.map((m) => cleanDialogueLine(m[1])).filter(Boolean);
+    }
+  }
+
+  if (!lines.length) {
+    lines = text
+      .split(/\n+/)
+      .map(cleanDialogueLine)
+      .filter(Boolean);
+  }
+
+  // 最后手段：只剩一条且还带数组外壳时，去掉外壳后按标点拆开
+  if (lines.length === 1 && /[\[【]/.test(lines[0])) {
+    const inner = lines[0].replace(/^[\[【]+/, '').replace(/[\]】]+$/, '');
+    lines = inner
+      .split(/\s*[,，;；]\s*/)
+      .map(cleanDialogueLine)
+      .filter(Boolean);
+  }
+
+  return lines.slice(0, count);
+}
+
+async function generateAutoBatch() {
+  const count = Math.min(24, Math.max(2, Number(config.autoBatchSize) || 24));
+  const startSpeaker = lastSpeaker() === 'marisa' ? 'reimu' : 'marisa';
+  const canon = canonTextFor({
+    character: startSpeaker,
+    topic: state.currentTopic || '',
+    history: state.aiHistory.slice(-12)
+  });
+  const messages = [
+    { role: 'system', content: '你是幻想乡同人对话的编剧。下面会提供两位主角的人设、一设资料和当前话题，请以她们的身份编写接下来连续的多句对话台词。' },
+    { role: 'system', content: `【博丽灵梦·人设】\n${config.autoPersonaReimu}` },
+    { role: 'system', content: `【雾雨魔理沙·人设】\n${config.autoPersonaMarisa}` }
+  ];
+  if (canon) messages.push({ role: 'system', content: `【一设参考】\n${canon}` });
+  if (state.autoSummary) messages.push({ role: 'system', content: `之前对话总结：${state.autoSummary}` });
+  messages.push({ role: 'system', content: `当前话题：${state.currentTopic || '随便聊聊'}` });
+  messages.push({ role: 'system', content: `现在是幻想乡的${timePeriodLabel()}（按真实世界时间）。你可以自然地呼应天色、作息与心情，但不要报出具体钟点和现实日期。` });
+  if (state.topicTransition) {
+    messages.push({ role: 'system', content: `刚才的话题已自然告一段落，现在两人很自然地把话题转到「${state.currentTopic}」。请用一两句话自然过渡、带出新话题，不要出现“换话题”“话题切换”这类场外说明。` });
+    state.topicTransition = false;
+  }
+  for (const m of state.aiHistory.slice(-10)) {
+    messages.push({ role: 'user', content: `${speakerName(m.speaker)}：${m.text}` });
+  }
+  messages.push({
+    role: 'user',
+    content: `请以 JSON 对象格式输出，格式必须严格为 {"lines":["台词一","台词二","台词三","台词四"]}，其中 lines 恰好包含 ${count} 个字符串，不要多也不要少（每句 1~3 句中文，口语自然，符合角色性格），第一句由${speakerName(startSpeaker)}说，之后两人严格交替。每句都要有新内容，不要重复上文中已经说过的话。只输出这个 JSON 对象，不要角色名前缀、不要任何解释。`
+  });
+  const raw = await callBatchAI(config.deepseekApiKey, config.baseUrl, config.model, messages, 0.95, Math.min(8000, Math.max(2000, count * 250)));
+  let lines = parseBatchReply(raw, count);
+  if (!lines.length) throw new Error('批量生成返回空');
+  lines = dedupeLines(lines, state.aiHistory.slice(-10).map((m) => m.text));
+  let sp = startSpeaker;
+  return lines.map((text) => {
+    const item = { speaker: sp, text };
+    sp = sp === 'marisa' ? 'reimu' : 'marisa';
+    return item;
+  });
 }
 
 async function callSummaryAI(messages) {
@@ -446,6 +733,16 @@ async function maybeSummarizeAuto() {
   state.autoSummary = summaryText;
   state.aiHistory = recent;
   pushLog('system', `（自动总结：${summaryText}）`);
+  const entry = {
+    id: newSummaryId(),
+    topic: state.currentTopic || '自动闲聊',
+    content: summaryText,
+    createdAt: Date.now()
+  };
+  state.summaryHistory.unshift(entry);
+  if (state.summaryHistory.length > 50) state.summaryHistory.pop();
+  state.currentSummary = entry;
+  saveSummaryHistory();
 }
 
 // ---------- 自动闲聊 ----------
@@ -485,13 +782,26 @@ function stopAutoChat() {
 async function autoChatTick() {
   if (!config.autoChatEnabled) return;
 
+  if (isSleepingTime()) {
+    if (!state.sleeping) {
+      state.sleeping = true;
+      state.autoQueue = [];
+      pushLog('system', '（夜深了，两人各自歇下，明早再继续～）');
+    }
+    return;
+  }
+  if (state.sleeping) {
+    state.sleeping = false;
+    pushLog('system', '（新的一天，神社的日常又继续了）');
+  }
+
   await maybeSummarizeAuto();
 
   if (Date.now() - state.topicStartTs >= config.topicRoundSec * 1000) {
-    rotateTopic();
+    await rotateTopic();
   }
   const winner = state.candidates.find((c) => c.votes.size >= config.switchVotes);
-  if (winner) rotateTopic();
+  if (winner) await rotateTopic();
 
   if (state.consecutiveErrors >= 4) {
     pushLog('system', '（内置 AI 暂时打盹了，休息一会儿再继续…）');
@@ -500,21 +810,30 @@ async function autoChatTick() {
     return;
   }
 
-  const speaker = lastSpeaker() === 'marisa' ? 'reimu' : 'marisa';
-  let text = '';
-  if (aiUsable()) {
+  if (!aiUsable()) {
+    const speaker = lastSpeaker() === 'marisa' ? 'reimu' : 'marisa';
+    const text = demoEngine.reply(speaker, state.currentTopic || '', lastSpeaker());
+    await sleep(600 + Math.random() * 900);
+    pushLog(speaker, text);
+    state.aiHistory.push({ speaker, text });
+    if (state.aiHistory.length > 30) state.aiHistory.shift();
+    return;
+  }
+
+  if (!state.autoQueue.length) {
     try {
-      text = await generateAutoMessage(speaker);
+      state.autoQueue = await generateAutoBatch();
       state.consecutiveErrors = 0;
     } catch (err) {
       state.consecutiveErrors++;
-      console.error('自动闲聊 AI 调用失败：', err.message);
+      console.error('自动闲聊批量生成失败：', err.message);
       return;
     }
-  } else {
-    text = demoEngine.reply(speaker, state.currentTopic || '', lastSpeaker());
-    await sleep(600 + Math.random() * 900);
   }
+  const item = state.autoQueue.shift();
+  if (!item || !item.text) return;
+  const speaker = item.speaker;
+  const text = item.text;
   pushLog(speaker, text);
   state.aiHistory.push({ speaker, text });
   if (state.aiHistory.length > 30) state.aiHistory.shift();
@@ -566,7 +885,7 @@ const rateBuckets = new Map();
 function rateLimit(req, pathname) {
   const perMin = Number(config.rateLimitPerMin) || 0;
   if (perMin <= 0) return null;
-  if (pathname !== '/api/chat' && pathname !== '/api/summarize' && pathname !== '/api/models') return null;
+  if (pathname !== '/api/chat' && pathname !== '/api/chat/batch' && pathname !== '/api/summarize' && pathname !== '/api/models') return null;
   const ip = clientIp(req);
   const now = Date.now();
   const win = rateBuckets.get(ip) || { start: now, count: 0 };
@@ -640,21 +959,28 @@ async function handleChat(req, res, body) {
     checkApiKey,
     checkBaseUrl,
     checkModel,
-    canon
+    canon,
+    canonMode
   } = body;
   if (character !== 'reimu' && character !== 'marisa') {
     return sendJSON(req, res, 400, { error: '缺少发言人（character）参数' });
   }
-  const key = apiKey || (config.aiEnabled ? config.deepseekApiKey : '');
-  if (!key) {
-    const msg = config.aiEnabled
+  const resolved = resolveAiEndpoint({
+    apiKey,
+    baseUrl,
+    missingKeyMsg: config.aiEnabled
       ? '还没有配置 AI Key：请在设置里填入自己的 API Key，或在 config.json 里配置 DeepSeek Key。'
-      : '内置 AI 已被管理员关闭，当前只能使用演示台词。';
-    return sendJSON(req, res, 400, { error: msg });
-  }
+      : '内置 AI 已被管理员关闭，当前只能使用演示台词。'
+  });
+  if (resolved.error) return sendJSON(req, res, 400, { error: resolved.error });
   try {
     const personaText = persona || (character === 'marisa' ? config.personaMarisa : config.personaReimu);
-    const canonText = String(canon || '').trim() || (config.canonEnabled !== false ? buildCanonText(character) : '');
+    const canonText = canonTextFor({
+      character,
+      topic,
+      history,
+      custom: canonMode === 'custom' ? canon : ''
+    });
     const messages = buildMessages({
       character,
       topic,
@@ -663,7 +989,7 @@ async function handleChat(req, res, body) {
       summary: summary || undefined,
       canon: canonText
     });
-    let reply = await callAI(key, baseUrl || config.baseUrl, model || config.model, messages, temperature);
+    let reply = await callAI(resolved.key, resolved.baseUrl, model || config.model, messages, temperature);
     if (checkEnabled && checkApiKey) {
       try {
         reply = await selfCheckReply({
@@ -684,20 +1010,104 @@ async function handleChat(req, res, body) {
   }
 }
 
+async function handleChatBatch(req, res, body) {
+  const {
+    character,
+    topic,
+    history,
+    apiKey,
+    baseUrl,
+    model,
+    temperature,
+    personas,
+    summary,
+    checkEnabled,
+    checkApiKey,
+    checkBaseUrl,
+    checkModel,
+    canon,
+    canonMode,
+    turns
+  } = body;
+  if (character !== 'reimu' && character !== 'marisa') {
+    return sendJSON(req, res, 400, { error: '缺少发言人（character）参数' });
+  }
+  const resolved = resolveAiEndpoint({
+    apiKey,
+    baseUrl,
+    missingKeyMsg: config.aiEnabled
+      ? '还没有配置 AI Key：请在设置里填入自己的 API Key，或在 config.json 里配置 DeepSeek Key。'
+      : '内置 AI 已被管理员关闭，当前只能使用演示台词。'
+  });
+  if (resolved.error) return sendJSON(req, res, 400, { error: resolved.error });
+  const count = Math.min(24, Math.max(2, Number(turns) || 4));
+  const pReimu = (personas && personas.reimu) || config.personaReimu;
+  const pMarisa = (personas && personas.marisa) || config.personaMarisa;
+  const canonText = canonTextFor({
+    character,
+    topic,
+    history,
+    custom: canonMode === 'custom' ? canon : ''
+  });
+  try {
+    const messages = [
+      { role: 'system', content: '你是幻想乡同人对话的编剧。下面会提供两位主角的人设、一设资料和当前话题，请以她们的身份编写接下来连续的多句对话台词。' },
+      { role: 'system', content: `【博丽灵梦·人设】\n${pReimu}` },
+      { role: 'system', content: `【雾雨魔理沙·人设】\n${pMarisa}` }
+    ];
+    if (canonText) messages.push({ role: 'system', content: `【一设参考】\n${canonText}` });
+    if (summary) messages.push({ role: 'system', content: `之前对话总结：${summary}` });
+    messages.push({ role: 'system', content: `当前话题：${topic || '随便聊聊'}` });
+    for (const m of (history || []).slice(-10)) {
+      messages.push({ role: 'user', content: `${speakerName(m.speaker)}：${m.text}` });
+    }
+    messages.push({
+      role: 'user',
+      content: `请以 JSON 对象格式输出，格式必须严格为 {"lines":["台词一","台词二","台词三","台词四"]}，其中 lines 恰好包含 ${count} 个字符串，不要多也不要少（每句 1~3 句中文，口语自然，符合角色性格），第一句由${speakerName(character)}说，之后两人严格交替。每句都要有新内容，不要重复上文中已经说过的话。只输出这个 JSON 对象，不要角色名前缀、不要任何解释。`
+    });
+    const raw = await callBatchAI(resolved.key, resolved.baseUrl, model || config.model, messages, temperature, Math.min(6000, Math.max(1600, count * 200)));
+    let lines = parseBatchReply(raw, count);
+    if (!lines.length) throw new Error('批量生成返回空');
+    lines = dedupeLines(lines, (history || []).slice(-10).map((m) => m.text));
+    let sp = character;
+    const replies = lines.map((text) => {
+      const item = { speaker: sp, text };
+      sp = sp === 'marisa' ? 'reimu' : 'marisa';
+      return item;
+    });
+    if (checkEnabled && checkApiKey) {
+      for (const r of replies) {
+        try {
+          r.text = await selfCheckReply({
+            persona: r.speaker === 'marisa' ? pMarisa : pReimu,
+            topic,
+            history,
+            reply: r.text,
+            check: { apiKey: checkApiKey, baseUrl: checkBaseUrl, model: checkModel },
+            canon: canonText
+          });
+        } catch (_) {}
+      }
+    }
+    sendJSON(req, res, 200, { replies });
+  } catch (err) {
+    sendJSON(req, res, 502, { error: `调用 AI 失败：${err.message}` });
+  }
+}
 async function handleSummarize(req, res, body) {
   const { messages, topic, apiKey, baseUrl, model, summaryApiKey, summaryBaseUrl, summaryModel } = body;
   const list = Array.isArray(messages) ? messages.filter((m) => m && m.text) : [];
   if (!list.length) {
     return sendJSON(req, res, 400, { error: '没有可总结的对话内容' });
   }
-  const key = summaryApiKey || apiKey || (config.aiEnabled ? config.deepseekApiKey : '');
-  if (!key) {
-    return sendJSON(req, res, 400, {
-      error: config.aiEnabled
-        ? '还没有可用的 API Key：请在设置里填自己的 Key，或确认 config.json 已配置 DeepSeek Key。'
-        : '内置 AI 已被管理员关闭，无法自动总结。'
-    });
-  }
+  const resolved = resolveAiEndpoint({
+    apiKey: summaryApiKey || apiKey,
+    baseUrl: summaryBaseUrl || baseUrl,
+    missingKeyMsg: config.aiEnabled
+      ? '还没有可用的 API Key：请在设置里填自己的 Key，或确认 config.json 已配置 DeepSeek Key。'
+      : '内置 AI 已被管理员关闭，无法自动总结。'
+  });
+  if (resolved.error) return sendJSON(req, res, 400, { error: resolved.error });
   try {
     const prompt = [
       { role: 'system', content: SUMMARIZE_SYSTEM },
@@ -707,8 +1117,8 @@ async function handleSummarize(req, res, body) {
       }
     ];
     const summary = await callAI(
-      key,
-      summaryBaseUrl || baseUrl || config.baseUrl,
+      resolved.key,
+      resolved.baseUrl,
       summaryModel || model || config.model,
       prompt,
       0.4
@@ -721,18 +1131,18 @@ async function handleSummarize(req, res, body) {
 
 async function handleModels(req, res, body) {
   const { apiKey, baseUrl } = body;
-  const key = apiKey || (config.aiEnabled ? config.deepseekApiKey : '');
-  if (!key) {
-    return sendJSON(req, res, 400, {
-      error: config.aiEnabled
-        ? '还没有可用的 API Key：请在设置里填自己的 Key，或确认 config.json 已配置 DeepSeek Key。'
-        : '内置 AI 已被管理员关闭，无法获取模型列表。'
-    });
-  }
+  const resolved = resolveAiEndpoint({
+    apiKey,
+    baseUrl,
+    missingKeyMsg: config.aiEnabled
+      ? '还没有可用的 API Key：请在设置里填自己的 Key，或确认 config.json 已配置 DeepSeek Key。'
+      : '内置 AI 已被管理员关闭，无法获取模型列表。'
+  });
+  if (resolved.error) return sendJSON(req, res, 400, { error: resolved.error });
   try {
-    const url = String(baseUrl || config.baseUrl).replace(/\/+$/, '') + '/models';
+    const url = resolved.baseUrl + '/models';
     const resp = await fetch(url, {
-      headers: { Authorization: `Bearer ${key}` }
+      headers: { Authorization: `Bearer ${resolved.key}` }
     });
     if (!resp.ok) {
       let detail = '';
@@ -760,6 +1170,8 @@ function handleState(req, res, voterId) {
     switchVotes: config.switchVotes,
     summarizeAfter: Number(config.summarizeAfter) || 0,
     summaryKeepRecent: Number(config.summaryKeepRecent) || 6,
+    canonEnabled: config.canonEnabled !== false,
+    canonSmart: config.canonSmart !== false,
     candidates: candidatesView(voterId),
     log: state.chatLog.slice(-60),
     serverTime: Date.now()
@@ -857,7 +1269,8 @@ function handleCanon() {
       pair: config.canonPair,
       notes: config.canonAiNotes
     },
-    enabled: config.canonEnabled !== false
+    enabled: config.canonEnabled !== false,
+    smart: config.canonSmart !== false
   };
 }
 
@@ -886,6 +1299,42 @@ function handleAutoPersonas(body) {
   };
 }
 
+function handleGetSummaries() {
+  return {
+    status: 200,
+    current: state.currentSummary || null,
+    history: state.summaryHistory
+  };
+}
+
+function handleUpdateSummary(id, body) {
+  const content = String((body && body.content) || '').trim();
+  if (!content) return { status: 400, error: '总结内容不能为空' };
+  if (content.length > 2000) return { status: 400, error: '总结内容过长（最多 2000 字）' };
+  const entry = state.summaryHistory.find((s) => s.id === id);
+  if (!entry) return { status: 404, error: '总结不存在' };
+  entry.content = content;
+  entry.updatedAt = Date.now();
+  if (state.currentSummary && state.currentSummary.id === id) {
+    state.currentSummary.content = content;
+    state.autoSummary = content;
+  }
+  saveSummaryHistory();
+  return { status: 200, ok: true, current: state.currentSummary || null, history: state.summaryHistory };
+}
+
+function handleDeleteSummary(id) {
+  const idx = state.summaryHistory.findIndex((s) => s.id === id);
+  if (idx === -1) return { status: 404, error: '总结不存在' };
+  state.summaryHistory.splice(idx, 1);
+  if (state.currentSummary && state.currentSummary.id === id) {
+    state.currentSummary = null;
+    state.autoSummary = null;
+  }
+  saveSummaryHistory();
+  return { status: 200, ok: true, current: state.currentSummary || null, history: state.summaryHistory };
+}
+
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -911,6 +1360,11 @@ const server = http.createServer(async (req, res) => {
     if (limited) {
       res.writeHead(limited.status, Object.assign({ 'Content-Type': 'application/json; charset=utf-8' }, baseHeaders(req)));
       return res.end(JSON.stringify({ error: limited.error }));
+    }
+
+    if (req.method === 'POST' && pathname === '/api/chat/batch') {
+      const body = await readBody(req);
+      return await handleChatBatch(req, res, body);
     }
 
     if (req.method === 'POST' && pathname === '/api/chat') {
@@ -992,6 +1446,27 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    if (req.method === 'GET' && pathname === '/api/summaries') {
+      const result = handleGetSummaries();
+      return sendJSON(req, res, 200, { current: result.current, history: result.history });
+    }
+
+    const summaryMatch = pathname.match(/^\/api\/summaries\/([\w-]+)$/);
+    if (summaryMatch) {
+      if (req.method === 'POST') {
+        const body = await readBody(req);
+        const result = handleUpdateSummary(summaryMatch[1], body);
+        if (result.ok) return sendJSON(req, res, 200, { ok: true, current: result.current, history: result.history });
+        return sendJSON(req, res, result.status, { error: result.error });
+      }
+      if (req.method === 'DELETE') {
+        const result = handleDeleteSummary(summaryMatch[1]);
+        if (result.ok) return sendJSON(req, res, 200, { ok: true, current: result.current, history: result.history });
+        return sendJSON(req, res, result.status, { error: result.error });
+      }
+      return sendJSON(req, res, 405, { error: 'Method Not Allowed' });
+    }
+
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       res.writeHead(405, Object.assign({ 'Content-Type': 'text/plain; charset=utf-8' }, baseHeaders(req)));
       return res.end('Method Not Allowed');
@@ -999,7 +1474,7 @@ const server = http.createServer(async (req, res) => {
 
     const rel = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
     const filePath = path.normalize(path.join(PUBLIC_DIR, rel));
-    if (!filePath.startsWith(PUBLIC_DIR)) {
+    if (!filePath.startsWith(PUBLIC_DIR + path.sep)) {
       res.writeHead(403, baseHeaders(req));
       return res.end('Forbidden');
     }
@@ -1027,7 +1502,7 @@ function listen(port) {
     }
   });
   server.listen(port, () => {
-    console.log('红白与黑白 · 主角组对谈站已启动：');
+    console.log('红白与黑白 · 茶话会已启动：');
     console.log(`  本机访问： http://localhost:${port}`);
     console.log(`  管理员口令：${config.adminToken}`);
     console.log(`  内置 AI：${config.aiEnabled ? '开' : '关'}（${config.deepseekApiKey ? config.model : '未配置 Key'}）`);

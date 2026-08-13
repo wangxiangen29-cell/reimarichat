@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>红白与黑白 · 灵梦 × 魔理沙</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23e8dcae'/%3E%3Ccircle cx='24' cy='24' r='7' fill='%23b8a876' opacity='0.5'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
   <!-- 夜空背景 -->
@@ -97,7 +97,7 @@
             </label>
             <label>模型
               <div class="model-row" id="modelRow">
-                <input id="modelInput" type="text" autocomplete="off" placeholder="deepseek-chat">
+                <input id="modelInput" type="text" autocomplete="off" placeholder="deepseek-v4-flash">
                 <button class="btn small" id="fetchModelsBtn" type="button">自动获取</button>
               </div>
             </label>
@@ -124,7 +124,7 @@
                 <input id="summaryBaseUrlInput" type="text" autocomplete="off" placeholder="https://api.deepseek.com/v1">
               </label>
               <label>总结模型
-                <input id="summaryModelInput" type="text" autocomplete="off" placeholder="deepseek-chat">
+                <input id="summaryModelInput" type="text" autocomplete="off" placeholder="deepseek-v4-flash">
               </label>
             </div>
             <label>自查 AI（不配置则不进行自查）
@@ -141,7 +141,7 @@
                 <input id="checkBaseUrlInput" type="text" autocomplete="off" placeholder="https://api.deepseek.com/v1">
               </label>
               <label>自查模型
-                <input id="checkModelInput" type="text" autocomplete="off" placeholder="deepseek-chat">
+                <input id="checkModelInput" type="text" autocomplete="off" placeholder="deepseek-v4-flash">
               </label>
             </div>
             <p class="settings-hint">自查 AI 使用你自己的 API，开启后每次输出前会多一次检查调用；总结可单独配置，也可以直接用内置。</p>
@@ -240,6 +240,7 @@
           <span id="autoStatusText">自动闲聊：未开启</span>
           <span class="topic-chip" id="topicChip" hidden></span>
           <button class="btn small" id="topicPanelBtn" disabled>话题投票</button>
+          <button class="btn small" id="summaryPanelBtn" type="button">总结</button>
         </div>
         <div class="vote-panel" id="votePanel" hidden>
           <div class="vote-list" id="voteList"></div>
@@ -249,6 +250,12 @@
             <button class="btn" id="proposeBtn">提议</button>
           </div>
           <p class="vote-hint">新话题先进候选池：攒够票数立即切换，否则每轮结束自动换票数最高的那个；没人提议时系统随机换题。</p>
+        </div>
+        <div class="vote-panel summary-panel" id="summaryPanel" hidden>
+          <div class="summary-current" id="summaryCurrent"></div>
+          <h4>历史总结</h4>
+          <div class="vote-list" id="summaryList"></div>
+          <p class="vote-hint">自动闲聊生成的「前情提要」会记录在这里，可编辑或删除；编辑「当前总结」会立即影响后续对话。</p>
         </div>
       </section>
 
@@ -277,7 +284,7 @@
         <button class="btn ghost small" id="aboutCloseBtn" type="button">关闭</button>
       </div>
       <div class="modal-body">
-        <p>欢迎来到主角组对谈站。这是一个让<strong>博丽灵梦</strong>和<strong>雾雨魔理沙</strong>用 AI 互相对话的同人小站，目前提供两种玩法。</p>
+        <p>欢迎来到「红白与黑白」茶话会。这是一个让<strong>博丽灵梦</strong>和<strong>雾雨魔理沙</strong>用 AI 互相对话的同人小站，目前提供两种玩法。</p>
 
         <h3>功能介绍</h3>
         <ul>
@@ -304,7 +311,7 @@
     </div>
   </div>
 
-  <script src="demo.js?v=6"></script>
-  <script src="app.js?v=6"></script>
+  <script src="demo.js?v=11"></script>
+  <script src="app.js?v=11"></script>
 </body>
 </html>

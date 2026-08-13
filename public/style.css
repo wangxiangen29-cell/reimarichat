@@ -479,6 +479,69 @@ body {
   padding: 6px 2px;
 }
 
+.summary-panel {
+  padding-top: 12px;
+}
+
+.summary-current textarea,
+.summary-item textarea {
+  width: 100%;
+  min-height: 80px;
+  resize: vertical;
+  border-radius: 10px;
+  border: 1px solid var(--panel-line);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink);
+  padding: 8px 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  font-family: inherit;
+}
+
+.summary-current .btn {
+  margin-top: 8px;
+}
+
+.summary-item {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.summary-item-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.summary-item-head .vote-text {
+  flex: 1;
+}
+
+.summary-item-head .vote-btn {
+  flex-shrink: 0;
+}
+
+.summary-item .vote-btn.danger {
+  color: #ff9d9d;
+  border-color: rgba(255, 120, 120, 0.4);
+}
+
+.summary-content {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink);
+  word-break: break-word;
+}
+
+.summary-item .btn {
+  align-self: flex-start;
+  margin-top: 8px;
+}
+
+.summary-item .btn + .btn {
+  margin-left: 6px;
+}
+
 /* ---------- 对话区 ---------- */
 .chat {
   flex: 1;
