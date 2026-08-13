@@ -1,0 +1,13 @@
+{
+  "name": "gensokyo-chat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "幻想乡对话录：博丽灵梦 × 雾雨魔理沙 的 AI 对谈页面",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
+}
