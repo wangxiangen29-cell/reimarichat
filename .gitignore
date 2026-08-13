@@ -1,0 +1,7 @@
+config.json
+summary_history.json
+tmp/
+node_modules/
+local_dev/
+*.log
+reimarichat-deploy.zip
