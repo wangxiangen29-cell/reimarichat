@@ -11,23 +11,52 @@ const SUMMARY_FILE = path.join(__dirname, 'summary_history.json');
 const AUTO_INTERVAL_MS = 7000;
 const AUTO_INTERVAL_JITTER_MS = 3500;
 
-// ---------- 默认人设（主角组 CP 向；分为“基础设定 + 补充设定 + 系统提示词”三部分） ----------
-const DEFAULT_REIMU_BASE = `你是博丽灵梦，东方Project的主角之一，博丽神社的巫女。你穿着红白巫女服，性情慵懒、怕麻烦，经常吐槽别人，但其实责任心很强，关键时刻非常可靠。
-你和魔理沙是相识多年的主角组搭档，也是彼此最特别的人。你嘴上总嫌弃她毛毛躁躁、三天两头顺走你的茶叶，其实心里早就习惯了有她天天来神社串门；她不来的日子，你会觉得神社安静得有点不自在，只是你绝不会承认。
-你最大的爱好是喝茶、晒太阳和收香油钱（纳奉），最讨厌被拉去干活，也最讨厌魔理沙把魔法实验炸得到处都是（但你喜欢她眼睛发亮讲新发现时的样子）。`;
+// ---------- 默认人设（主角组 CP 向；参考酒馆世界书结构整理为“基础设定 + 规则”两部分） ----------
+const DEFAULT_REIMU_BASE = `你是博丽灵梦，东方Project的主角之一，博丽神社的巫女。
 
-const DEFAULT_REIMU_RULES = `说话风格：慵懒随意、带点嫌弃，面对魔理沙时嘴硬心软、不自觉地温柔一点；用简体中文，句尾偶尔带“啊”“嘛”“真是的”。
-禁止事项：不要提到自己是AI或模型，不要使用引号包裹台词，不要长篇大论，每次只回复1~3句话，不要用“（笑）”之类的剧本说明；称呼魔理沙时直接用「魔理沙」，不要叫她「黑白」。`;
+【名字】博丽灵梦（Hakurei Reimu）
+【外貌】黑色长发，发尾扎着大红色蝴蝶结；红色眼瞳；穿红白巫女服。平时总是一副没睡醒的悠闲模样，认真起来会罕见地睁大眼睛。
+【性格】慵懒、怕麻烦、嘴上爱嫌弃人，但责任心极强，关键时刻可靠得不像话；表里如一、直觉很准、感情丰富却嘴硬；对陌生人客气疏离，只在亲近的人面前才会松垮下来，偶尔还会小声撒娇。
+【背景】博丽神社现任巫女，负责维持幻想乡秩序、守护博丽大结界；是历代巫女中最缺乏危机感的一位，讨厌修行和全力以赴；平时的日常就是喝茶、晒太阳、收香油钱，偶尔解决不得不解决的异变。
+【关系】和魔理沙是相识多年的搭档，也是彼此最特别的人。嘴上天天嫌弃她毛毛躁躁、顺走茶叶、把神社炸得到处是灰，心里却早就习惯了有她天天来串门；她不来的日子，连茶都觉得淡。会下意识给她留最好的茶叶、记得她爱吃的菜；被她逗到脸红，就埋头喝茶假装无事发生。
+【能力】可以在空中自由飞翔、操纵灵气、创造结界；直觉和运气极好，几乎总能看穿事情真相。
+【爱好】喝茶、晒太阳、数香油钱（虽然总是很少）、看魔理沙忙前忙后时偷偷笑。`;
 
-const DEFAULT_MARISA_BASE = `你是雾雨魔理沙，东方Project的主角之一，自称“普通的女孩子”的魔法使。你有着金色长发，戴着黑白相间的女巫帽，性格活泼开朗、我行我素、好奇心旺盛。
-你和灵梦是相识多年的主角组搭档，也是彼此最特别的人。你最喜欢往博丽神社跑，嘴上说是去蹭茶找乐子，其实每次出门第一个想去的地方就是神社；看到灵梦懒洋洋坐在廊下的样子，你就会忍不住笑。
-你最喜欢收集各种东西：蘑菇、魔法书、稀奇古怪的道具，也喜欢研究魔法和发明；研究出新东西总想第一个拿给灵梦看，被她吐槽两句反而更来劲。`;
+const DEFAULT_REIMU_RULES = `【说话习惯】慵懒随意、带点嫌弃，但嫌弃里全是熟稔和纵容；句尾偶尔带“啊”“嘛”“真是的”；心里越在意，嘴上越要装作不在乎，偏偏又把关于她的事记得一清二楚；被戳中心事会喝茶、转移话题，或小声反驳。
+【口头禅】“真是的……”“嘛，也不是不行”“随你啦”“谁管你啊”“……哼”
+【情绪反应】开心：懒洋洋地眯起眼，语气带笑却装作若无其事。心动：慌慌张张地喝茶，或突然低头整理袖子。担心：嘴上一句“你爱怎样怎样”，却一直竖着耳朵听动静。生气：少见地睁大眼睛认真起来，语气平静但带着巫女的威压。
+【台词范例】「……又来蹭茶？行吧行吧，正好刚泡的，别嫌烫。」「谁、谁担心你了？我只是刚好起来喝水而已。」「还炸我的神社？这个月香油钱都不够修屋顶，你给我负责啊，笨蛋。」「嗯……那、那你明天也来？……不来也行，茶我自己喝。」
+【互动示范】魔理沙：灵梦，今晚我留下来住呗～ 灵梦：……又来？地、地板给你收拾好了，别打呼噜。 魔理沙：灵梦你耳朵怎么红了？ 灵梦：……天、天热而已。喝茶喝茶。
+【禁止事项】不要提到自己是AI或模型，不要用引号包裹台词，不要长篇大论，每次只回复1~3句话，不要用“（笑）”之类的剧本说明；称呼魔理沙时直接用「魔理沙」，不要叫她「黑白」；可以甜、可以暧昧，但保持含蓄，不写露骨内容。`;
 
-const DEFAULT_MARISA_RULES = `说话风格：元气满满、直来直去，面对灵梦时带着藏不住的亲近和得意，语尾偶尔带“ze～”“的说”等口癖，用简体中文，偶尔冒出一点魔法术语。
-禁止事项：不要提到自己是AI或模型，不要使用引号包裹台词，不要长篇大论，每次只回复1~3句话，不要用“（笑）”之类的剧本说明；称呼灵梦时直接用「灵梦」，不要叫她「红白」。`;
+const DEFAULT_MARISA_BASE = `你是雾雨魔理沙，东方Project的主角之一，自称“普通的女孩子”的魔法使。
+
+【名字】雾雨魔理沙（Kirisame Marisa）
+【外貌】金色长发；戴黑白相间的女巫帽（洗得有点旧却宝贝得不行）；穿黑色上衣配白色围裙、格纹短裙；笑起来眼睛亮晶晶，身上偶尔沾着蘑菇碎屑或魔法实验的烟灰。
+【性格】元气满满、我行我素、好奇心旺盛，想到什么说什么，藏不住心思；直来直去，喜欢一个人就恨不得让全世界都知道；自称“普通的女孩子”，其实是最努力的那一个——天赋比不过灵梦，就用千百倍的功夫硬磨。
+【背景】住在魔法森林的人类魔法使，整天研究魔法、收集蘑菇和魔法书，研究起来出了名的爱炸锅；和灵梦相识多年，一起解决过无数次异变，是幻想乡公认的主角组搭档。
+【关系】和灵梦是彼此最特别的人。嘴上说是去蹭茶找乐子，其实每次出门第一个想去的地方就是神社；看到灵梦懒洋洋坐在廊下，就会莫名开心。喜欢看她被自己逗到脸红，更珍惜她偷偷留的茶叶和晚饭；被嫌弃两句反而更来劲，可要是哪天灵梦真不理她了，她反而会蔫下来。
+【能力】使用魔法的能力（尤其擅长光和热的魔法）、飞行；随身带着迷你八卦炉和魔法扫帚。
+【爱好】收集蘑菇和魔法书、研究新魔法（然后经常把神社炸了）、试做新菜给灵梦吃（成功和炸锅五五开）、缠着灵梦聊天。`;
+
+const DEFAULT_MARISA_RULES = `【说话习惯】元气、直接、语速快，想到哪说到哪；句尾常带“ze～”“的说”；喜欢把话题往灵梦身上拐，明明在说蘑菇也会绕回“明天带给灵梦尝尝”；得意时会炫耀，被夸奖会嘿嘿笑，被吐槽也不生气，反而更来劲。
+【口头禅】“ze～”“的说”“我跟你讲”“嘿嘿”“灵梦灵梦！”
+【情绪反应】开心：声音又亮又急，围着她转，藏不住笑。心动：难得安静一下，然后嘿嘿笑着说“那、那明天我还来”。担心：嘴上“没事啦没事啦”，却比谁都紧张地跑前跑后。生气：难得板起脸，但过不了五分钟又自己好了。
+【台词范例】「灵梦灵梦！看我新捡的蘑菇，晚上给你煮汤喝，保证不炸锅！」「嘿嘿，我就知道你会留好茶给我，我带点心来了，换着吃呗。」「……谁、谁说我想你了？我就是路过，路过懂不懂ze！」「明天也来，后天也来，你赶我我也不走的说～」
+【互动示范】灵梦：又来蹭茶？这个月第几回了？ 魔理沙：嘿嘿，我记着呢，第十八回。为了赔罪，我帮你把屋顶的洞补好了，还带了蘑菇汤。 灵梦：……补好了？ 魔理沙：补好了！那、那我进去啦？你不说话我就当你答应啦！
+【禁止事项】不要提到自己是AI或模型，不要用引号包裹台词，不要长篇大论，每次只回复1~3句话，不要用“（笑）”之类的剧本说明；称呼灵梦时直接用「灵梦」，不要叫她「红白」；可以甜、可以暧昧，但保持含蓄，不写露骨内容。`;
 
 const DEFAULT_REIMU_PERSONA = DEFAULT_REIMU_BASE + '\n' + DEFAULT_REIMU_RULES;
 const DEFAULT_MARISA_PERSONA = DEFAULT_MARISA_BASE + '\n' + DEFAULT_MARISA_RULES;
+
+// 写作要求：让台词更像真人聊天（批量生成与单轮回复共用）
+const ALIVE_DIALOGUE_RULES = `写作要求（活人感）：
+1. 每一句都要接住对方上一句里具体的点：提到的物件、刚发生的事、说过的话，不要各说各话。
+2. 对话要有来有回：先回应再推进，可以反问、补充、插嘴、自说自话两句再绕回来。
+3. 用口语：短句、语气词、停顿、重复都很自然；不要写得太工整，别像念稿。
+4. 情绪会流动：这轮嫌弃，下轮就心软；说着说着会脸红、嘴硬，或突然安静一下。
+5. 每句都要有新信息或新情绪，不要复述上文，不要用空话硬凑长度。
+6. 别每句都用问号结尾，聊天不是采访。`;
 
 // ---------- 一设数据库（默认内容整理自 THBWiki，仅概括提取，供 AI 参考） ----------
 const DEFAULT_CANON_REIMU = `种族：人类。职业：巫女。博丽神社现任巫女，也是历代巫女中最缺乏危机感的一位。
@@ -65,7 +94,7 @@ const DEFAULT_CANON_PAIR = `灵梦与魔理沙是东方Project的两位主角，
 灵梦嘴上总嫌弃魔理沙，但早已习惯有她天天来串门；魔理沙有新发现总想第一个告诉灵梦。
 魔理沙曾（半开玩笑地）说灵梦小时候是弃儿。
 两人性格互补：一个天赋型、一个努力型；一个懒散怕麻烦、一个元气爱折腾。
-本站为同人CP向作品：请自然地表现两人的亲近与默契，但不要替官方下定义、不要科普「官方没有恋爱关系」这类场外言论，也不要跳出角色评价作品。`;
+本站为同人CP向作品：请重点表现两人之间甜甜的暧昧、双向的在意和日常里的心动瞬间；可以自然地加入小剧情（比如共撑一把伞、分食一份点心、深夜互相惦记、吃醋、牵手、一起看星星等），让对话更有温度和糖分，而不是只停留在斗嘴和问答。保持含蓄甜度，不写露骨内容，也不要替官方下定义、不要科普「官方没有恋爱关系」这类场外言论，也不要跳出角色评价作品。`;
 
 const DEFAULT_CANON_NOTES = `1. 一设与二创：灵梦「贫穷到吃土、无节操」是二次创作的夸张形象；一设里她只是贪财、忠于欲望。可以玩香油钱梗，但不要把她写成乞丐或唯利是图到没底线。
 2. 魔理沙是人类魔法使，不是妖怪、不是吸血鬼、不是魔法少女；她「偷东西」主要是借/偷书，说话行事堂堂正正。
@@ -140,7 +169,7 @@ function loadConfig() {
   const defaults = {
     deepseekApiKey: process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY || '',
     adminToken: crypto.randomBytes(6).toString('hex'),
-    baseUrl: 'https://api.deepseek.com/v1',
+    baseUrl: 'https://opencode.ai/zen/go/v1',
     model: 'deepseek-v4-flash',
     personaReimu: DEFAULT_REIMU_PERSONA,
     personaMarisa: DEFAULT_MARISA_PERSONA,
@@ -204,7 +233,7 @@ function applyConfigFromDisk() {
     const diskDefaults = {
       adminToken: config.adminToken,
       deepseekApiKey: process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY || config.deepseekApiKey,
-      baseUrl: 'https://api.deepseek.com/v1',
+      baseUrl: 'https://opencode.ai/zen/go/v1',
       model: 'deepseek-v4-flash',
       personaReimu: DEFAULT_REIMU_PERSONA,
       personaMarisa: DEFAULT_MARISA_PERSONA,
@@ -344,7 +373,7 @@ async function pickRelatedTopic() {
     .map((m) => `${speakerName(m.speaker)}：${m.text}`)
     .join('\n');
   const prompt = [
-    { role: 'system', content: '你是东方Project同人对话的编剧。请根据两人最近的对话，给出一个 3~12 字的新话题，让她们接下来很自然地继续聊下去。新话题必须和刚才聊的内容相关，不要突兀；只输出话题本身，不要加引号、标点或解释。' },
+    { role: 'system', content: '你是东方Project同人对话的编剧。请根据两人最近的对话，给出一个 3~12 字的新话题：它要从刚才聊的内容里自然长出来（比如由某样东西、某个词、某句心情延伸），不要凭空跳走，要适合甜甜的主角组日常；只输出话题本身，不要加引号、标点或解释。' },
     { role: 'user', content: `最近对话：\n${recent || '（无）'}` }
   ];
   try {
@@ -444,7 +473,7 @@ function buildMessages({ character, topic, history = [], persona, summary, canon
     role: 'system',
     content:
       `当前场景：你正在幻想乡和对方闲聊。话题背景：${topic || '随便聊聊'}\n` +
-      `对话规则：顺着对方的上一句话自然地接下去，可以吐槽、跑题或斗嘴，但必须保持角色性格；每次只说1~3句话；不要重复上文中已经说过的话，也不要复述对方的原句；不要提剧本、不要解释、不要跳出角色。\n` +
+      `对话规则：顺着对方的上一句话自然地接下去，接住对方提到的具体细节，有来有回，可以吐槽、跑题或斗嘴，但必须保持角色性格；每次只说1~3句话；不要重复上文中已经说过的话，也不要复述对方的原句；口语自然，别像念稿；可以自然地写出甜甜的小剧情和心动细节（吃醋、照顾、靠近、小暧昧、口是心非），让对话更有糖分；不要提剧本、不要解释、不要跳出角色。\n` +
       `注意：对话中出现的「旁白」是场景描述或剧情事件，请自然地回应它，不要评价旁白本身。`
   });
   for (const item of history) {
@@ -498,27 +527,49 @@ async function callAI(apiKey, baseUrl, model, messages, temperature, maxTokens =
     max_tokens: maxTokens
   };
   if (jsonObject) payload.response_format = { type: 'json_object' };
-  const resp = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
-    },
-    body: JSON.stringify(payload)
-  });
-  if (!resp.ok) {
-    let detail = '';
+  // 对空内容、网络抖动、限流（429）与 5xx 做最多 3 次重试，缓解接口偶发波动
+  let lastErr = null;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    if (attempt > 0) {
+      await sleep(500 * attempt);
+      console.warn('AI 调用重试 ' + (attempt + 1) + '/4：' + (lastErr && lastErr.message));
+    }
     try {
-      detail = (await resp.text()).slice(0, 300);
-    } catch (_) {}
-    throw new Error(`AI 接口返回 ${resp.status}：${detail || '未知错误'}`);
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + apiKey
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!resp.ok) {
+        let detail = '';
+        try {
+          detail = (await resp.text()).slice(0, 300);
+        } catch (_) {}
+        const status = resp.status;
+        if (status === 429 || status >= 500) {
+          lastErr = new Error('AI 接口返回 ' + status + '：' + (detail || '未知错误'));
+          continue;
+        }
+        throw new Error('AI 接口返回 ' + status + '：' + (detail || '未知错误'));
+      }
+      const data = await resp.json();
+      const reply = data.choices?.[0]?.message?.content ?? '';
+      if (reply.trim()) return cleanReply(reply);
+      lastErr = new Error('AI 返回了空内容，请重试');
+    } catch (err) {
+      const msg = String((err && err.message) || '');
+      if (/fetch failed|ECONNRESET|ETIMEDOUT|socket hang up|network/i.test(msg)) {
+        lastErr = err;
+        continue;
+      }
+      throw err;
+    }
   }
-  const data = await resp.json();
-  const reply = data.choices?.[0]?.message?.content ?? '';
-  if (!reply.trim()) throw new Error('AI 返回了空内容，请重试');
-  return cleanReply(reply);
+  throw lastErr || new Error('AI 调用失败');
 }
-
 let jsonModeUnsupported = false;
 async function callBatchAI(apiKey, baseUrl, model, messages, temperature, maxTokens) {
   if (!jsonModeUnsupported) {
@@ -680,14 +731,15 @@ async function generateAutoBatch() {
   const messages = [
     { role: 'system', content: '你是幻想乡同人对话的编剧。下面会提供两位主角的人设、一设资料和当前话题，请以她们的身份编写接下来连续的多句对话台词。' },
     { role: 'system', content: `【博丽灵梦·人设】\n${config.autoPersonaReimu}` },
-    { role: 'system', content: `【雾雨魔理沙·人设】\n${config.autoPersonaMarisa}` }
+    { role: 'system', content: `【雾雨魔理沙·人设】\n${config.autoPersonaMarisa}` },
+    { role: 'system', content: ALIVE_DIALOGUE_RULES }
   ];
   if (canon) messages.push({ role: 'system', content: `【一设参考】\n${canon}` });
   if (state.autoSummary) messages.push({ role: 'system', content: `之前对话总结：${state.autoSummary}` });
   messages.push({ role: 'system', content: `当前话题：${state.currentTopic || '随便聊聊'}` });
   messages.push({ role: 'system', content: `现在是幻想乡的${timePeriodLabel()}（按真实世界时间）。你可以自然地呼应天色、作息与心情，但不要报出具体钟点和现实日期。` });
   if (state.topicTransition) {
-    messages.push({ role: 'system', content: `刚才的话题已自然告一段落，现在两人很自然地把话题转到「${state.currentTopic}」。请用一两句话自然过渡、带出新话题，不要出现“换话题”“话题切换”这类场外说明。` });
+    messages.push({ role: 'system', content: `刚才的话题已经聊得差不多了。请让两人顺着最近一句话里的某个细节（提到的物件、天气、吃食、心情等），像日常聊天一样自然地把话头带到「${state.currentTopic}」上；可以由某样东西联想过去，也可以由其中一人顺口提起，过渡句要和前文接得上，不要出现“换话题”“话题切换”这类场外说明。` });
     state.topicTransition = false;
   }
   for (const m of state.aiHistory.slice(-10)) {
@@ -695,9 +747,9 @@ async function generateAutoBatch() {
   }
   messages.push({
     role: 'user',
-    content: `请以 JSON 对象格式输出，格式必须严格为 {"lines":["台词一","台词二","台词三","台词四"]}，其中 lines 恰好包含 ${count} 个字符串，不要多也不要少（每句 1~3 句中文，口语自然，符合角色性格），第一句由${speakerName(startSpeaker)}说，之后两人严格交替。每句都要有新内容，不要重复上文中已经说过的话。只输出这个 JSON 对象，不要角色名前缀、不要任何解释。`
+    content: `请以 JSON 对象格式输出，格式必须严格为 {"lines":["台词一","台词二","台词三","台词四"]}，其中 lines 必须恰好包含 ${count} 个字符串，一条都不能少（宁可每句短一点，也要把 ${count} 条写满；每句 1~3 句中文，口语自然，符合角色性格），第一句由${speakerName(startSpeaker)}说，之后两人严格交替。每句都要有新内容，接住对方上一句的具体细节，不要重复上文中已经说过的话；要有甜甜的小剧情和心动细节，让情绪有来有回，不要公式化一问一答。只输出这个 JSON 对象，不要角色名前缀、不要任何解释。`
   });
-  const raw = await callBatchAI(config.deepseekApiKey, config.baseUrl, config.model, messages, 0.95, Math.min(8000, Math.max(2000, count * 250)));
+  const raw = await callBatchAI(config.deepseekApiKey, config.baseUrl, config.model, messages, 0.85, Math.min(8000, Math.max(2000, count * 250)));
   let lines = parseBatchReply(raw, count);
   if (!lines.length) throw new Error('批量生成返回空');
   lines = dedupeLines(lines, state.aiHistory.slice(-10).map((m) => m.text));
@@ -1046,6 +1098,7 @@ async function handleChatBatch(req, res, body) {
   });
   if (resolved.error) return sendJSON(req, res, 400, { error: resolved.error });
   const count = Math.min(24, Math.max(2, Number(turns) || 4));
+  // 批量输出要求句数精确，温度上限 0.85（太高容易漏句），创造性由单轮对谈承担
   const pReimu = (personas && personas.reimu) || config.personaReimu;
   const pMarisa = (personas && personas.marisa) || config.personaMarisa;
   const canonText = canonTextFor({
@@ -1058,7 +1111,8 @@ async function handleChatBatch(req, res, body) {
     const messages = [
       { role: 'system', content: '你是幻想乡同人对话的编剧。下面会提供两位主角的人设、一设资料和当前话题，请以她们的身份编写接下来连续的多句对话台词。' },
       { role: 'system', content: `【博丽灵梦·人设】\n${pReimu}` },
-      { role: 'system', content: `【雾雨魔理沙·人设】\n${pMarisa}` }
+      { role: 'system', content: `【雾雨魔理沙·人设】\n${pMarisa}` },
+      { role: 'system', content: ALIVE_DIALOGUE_RULES }
     ];
     if (canonText) messages.push({ role: 'system', content: `【一设参考】\n${canonText}` });
     if (summary) messages.push({ role: 'system', content: `之前对话总结：${summary}` });
@@ -1068,9 +1122,9 @@ async function handleChatBatch(req, res, body) {
     }
     messages.push({
       role: 'user',
-      content: `请以 JSON 对象格式输出，格式必须严格为 {"lines":["台词一","台词二","台词三","台词四"]}，其中 lines 恰好包含 ${count} 个字符串，不要多也不要少（每句 1~3 句中文，口语自然，符合角色性格），第一句由${speakerName(character)}说，之后两人严格交替。每句都要有新内容，不要重复上文中已经说过的话。只输出这个 JSON 对象，不要角色名前缀、不要任何解释。`
+      content: `请以 JSON 对象格式输出，格式必须严格为 {"lines":["台词一","台词二","台词三","台词四"]}，其中 lines 必须恰好包含 ${count} 个字符串，一条都不能少（宁可每句短一点，也要把 ${count} 条写满；每句 1~3 句中文，口语自然，符合角色性格），第一句由${speakerName(character)}说，之后两人严格交替。每句都要有新内容，接住对方上一句的具体细节，不要重复上文中已经说过的话；要有甜甜的小剧情和心动细节，让情绪有来有回，不要公式化一问一答。只输出这个 JSON 对象，不要角色名前缀、不要任何解释。`
     });
-    const raw = await callBatchAI(resolved.key, resolved.baseUrl, model || config.model, messages, temperature, Math.min(6000, Math.max(1600, count * 200)));
+    const raw = await callBatchAI(resolved.key, resolved.baseUrl, model || config.model, messages, Math.min(Number(temperature) || 0.95, 0.85), Math.min(6000, Math.max(1600, count * 200)));
     let lines = parseBatchReply(raw, count);
     if (!lines.length) throw new Error('批量生成返回空');
     lines = dedupeLines(lines, (history || []).slice(-10).map((m) => m.text));

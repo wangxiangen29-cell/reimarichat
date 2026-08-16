@@ -128,7 +128,7 @@
           apiKey: '',
           baseUrl: 'https://api.deepseek.com/v1',
           model: 'deepseek-v4-flash',
-          temperature: 0.95,
+          temperature: 0.85,
           personaBaseReimu: '',
           personaExtraReimu: '',
           personaBaseMarisa: '',
@@ -154,7 +154,7 @@
         apiKey: '',
         baseUrl: 'https://api.deepseek.com/v1',
         model: 'deepseek-v4-flash',
-        temperature: 0.95,
+        temperature: 0.85,
         personaBaseReimu: '',
         personaExtraReimu: '',
         personaBaseMarisa: '',
@@ -227,6 +227,46 @@
 
   function closeAbout() {
     els.aboutModal.hidden = true;
+  }
+
+  function splitSentences(text) {
+    const raw = String(text || '').trim();
+    const chars = Array.from(raw);
+    const STRONG = new Set(['。', '！', '？', '!', '?', '…', '—']);
+    const DROP = new Set(['，', '；', '：']);
+    const sentences = [];
+    let buf = '';
+    for (let i = 0; i < chars.length; i++) {
+      const ch = chars[i];
+      if (STRONG.has(ch)) {
+        let punct = ch;
+        while (i + 1 < chars.length && chars[i + 1] === ch) {
+          punct += chars[i + 1];
+          i++;
+        }
+        if (buf.trim()) {
+          sentences.push(buf.trim() + punct);
+          buf = '';
+        }
+      } else if (DROP.has(ch)) {
+        if (buf.trim()) {
+          sentences.push(buf.trim());
+          buf = '';
+        }
+      } else {
+        buf += ch;
+      }
+    }
+    if (buf.trim()) sentences.push(buf.trim());
+    return sentences;
+  }
+
+  function appendMessageSplit(speaker, text, container) {
+    const sentences = splitSentences(text);
+    const parts = sentences.length ? sentences : [String(text || '').trim()].filter(Boolean);
+    for (const s of parts) {
+      appendMessage(speaker, s, container);
+    }
   }
 
   function appendMessage(speaker, text, container) {
@@ -464,7 +504,7 @@
       if (entry.type === 'system') {
         appendSystem(entry.text, els.autoChatLog);
       } else {
-        appendMessage(entry.type, entry.text, els.autoChatLog);
+        appendMessageSplit(entry.type, entry.text, els.autoChatLog);
       }
       if (entry.id > lastAutoMsgId) lastAutoMsgId = entry.id;
     }
@@ -488,7 +528,7 @@
         if (entry.type === 'system') {
           appendSystem(entry.text, els.autoChatLog);
         } else {
-          appendMessage(entry.type, entry.text, els.autoChatLog);
+          appendMessageSplit(entry.type, entry.text, els.autoChatLog);
         }
         lastAutoMsgId = entry.id;
       }
@@ -902,12 +942,22 @@
 
   async function renderReply(speaker, text) {
     if (!text || stopRequested) return false;
+    const sentences = splitSentences(text);
+    const parts = sentences.length ? sentences : [String(text).trim()].filter(Boolean);
+    history.push({ speaker, text });
+
     const typingRow = appendTyping(speaker);
     await sleepMs(500 + Math.random() * 500);
     removeTyping(typingRow);
     if (stopRequested) return false;
-    appendMessage(speaker, text);
-    history.push({ speaker, text });
+
+    for (let i = 0; i < parts.length; i++) {
+      appendMessage(speaker, parts[i]);
+      if (i < parts.length - 1) {
+        await sleepMs(700 + Math.random() * 700);
+        if (stopRequested) return false;
+      }
+    }
     await maybeSummarizeManual();
     return true;
   }
