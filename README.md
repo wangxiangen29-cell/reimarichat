@@ -84,8 +84,8 @@ AI 调用自带可靠性保护：空内容、网络抖动、限流（429）和 5
 
 ## 文件说明
 
-- `server.js`：本地服务器（静态页面、AI 转发、自动闲聊、话题投票、配置热加载、限流与 CORS）。
-- `public/`：前端页面（`index.html`、`style.css`、`app.js`、`demo.js`、`avatars/`），页面为幻想乡主角组风格（灵梦红白 × 魔理沙金黑，御朱印、鸟居纹样）。
+- `server.js`：本地服务器入口（静态服务、路由分发），业务逻辑拆分在 `lib/` 下（`personas.js`、`config.js`、`state.js`、`time.js`、`ambient.js`、`scene.js`、`events.js`、`topics.js`、`ai.js`、`autochat.js`、`routes.js`）。
+- `public/`：前端页面（`index.html`、`style.css`、`demo.js`、`avatars/` 及 `js/` 下的 ES 模块 `core.js`、`render.js`、`panels.js`、`summaries.js`、`auto.js`、`chat.js`、`main.js`），页面为幻想乡主角组风格（灵梦红白 × 魔理沙金黑，御朱印、鸟居纹样）。
 - `config.json`：服务器配置（Key、管理员口令、开关，已 .gitignore）。
 - `Procfile`：云平台启动文件（Render 等使用）。
 
