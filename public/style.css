@@ -406,6 +406,78 @@ body {
   white-space: nowrap;
 }
 
+.scene-chip {
+  max-width: 100%;
+  white-space: normal;
+  line-height: 1.5;
+  background: rgba(140, 190, 255, 0.10);
+  border-color: rgba(140, 190, 255, 0.28);
+  color: #bfd9ff;
+}
+
+.heart-chip {
+  max-width: 100%;
+  white-space: normal;
+  line-height: 1.5;
+  background: rgba(255, 150, 190, 0.10);
+  border-color: rgba(255, 150, 190, 0.30);
+  color: #ffc3d6;
+}
+
+.weather-chip {
+  max-width: 100%;
+  white-space: normal;
+  line-height: 1.5;
+  background: rgba(150, 255, 190, 0.08);
+  border-color: rgba(150, 255, 190, 0.25);
+  color: #c8f5d9;
+}
+
+.manual-env {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+}
+
+.gift-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  margin-top: 10px;
+  background: rgba(150, 130, 255, 0.07);
+  border: 1px dashed rgba(150, 130, 255, 0.28);
+  border-radius: 12px;
+}
+.gift-label {
+  font-size: 12px;
+  color: #b3a5cf;
+}
+.gift-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #e8e2f5;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.gift-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.13);
+}
+.gift-btn:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+
 .vote-panel {
   border-top: 1px dashed var(--panel-line);
   padding-top: 10px;

@@ -65,6 +65,14 @@
     autoPanel: $('autoPanel'),
     autoStatusText: $('autoStatusText'),
     topicChip: $('topicChip'),
+    beijingTimeChip: $('beijingTimeChip'),
+    sceneTextChip: $('sceneTextChip'),
+    heartChip: $('heartChip'),
+    weatherChip: $('weatherChip'),
+    giftBar: $('giftBar'),
+    manualEnv: $('manualEnv'),
+    manualSceneChip: $('manualSceneChip'),
+    manualWeatherChip: $('manualWeatherChip'),
     topicPanelBtn: $('topicPanelBtn'),
     votePanel: $('votePanel'),
     voteList: $('voteList'),
@@ -114,6 +122,7 @@
   let editingSummaryId = null;
   let autoActive = false;
   let pollTimer = null;
+  let clockTimer = null;
   let lastAutoMsgId = 0;
   let initialized = false;
   let lastStatusOk = false;
@@ -249,7 +258,7 @@
           buf = '';
         }
       } else if (DROP.has(ch)) {
-        if (buf.trim()) {
+        if (buf.trim().length >= 2) {
           sentences.push(buf.trim());
           buf = '';
         }
@@ -261,11 +270,28 @@
     return sentences;
   }
 
+  function mergePunctOnly(speaker, part, container) {
+    if (!part) return false;
+    const log = container || els.chatLog;
+    const rows = log.querySelectorAll('.msg.' + speaker);
+    const lastRow = rows[rows.length - 1];
+    if (!lastRow) return false;
+    const textEl = lastRow.querySelector('.bubble > div:last-child');
+    if (!textEl || !textEl.textContent) return false;
+    textEl.textContent += part;
+    if (!suppressScroll) scrollToBottom();
+    return true;
+  }
+
   function appendMessageSplit(speaker, text, container) {
     const sentences = splitSentences(text);
-    const parts = sentences.length ? sentences : [String(text || '').trim()].filter(Boolean);
-    for (const s of parts) {
-      appendMessage(speaker, s, container);
+    const raw = String(text || '').trim();
+    const parts = sentences.length ? sentences : [raw].filter(Boolean);
+    for (const part of parts) {
+      if (parts.length === 1 && /^[\s，。！？!?…—、；：,.!?~～…·]+$/.test(part) && mergePunctOnly(speaker, part, container)) {
+        continue;
+      }
+      appendMessage(speaker, part, container);
     }
   }
 
@@ -334,7 +360,8 @@
     if (!suppressScroll) scrollToBottom();
   }
 
-  function appendTyping(speaker) {
+  function appendTyping(speaker, container) {
+    const log = container || els.chatLog;
     const row = document.createElement('div');
     row.className = `msg ${speaker} typing`;
     const avatar = document.createElement('div');
@@ -352,8 +379,8 @@
     }
     row.appendChild(avatar);
     row.appendChild(bubble);
-    els.chatLog.appendChild(row);
-    scrollToBottom();
+    log.appendChild(row);
+    if (!suppressScroll) scrollToBottom();
     return row;
   }
 
@@ -379,7 +406,13 @@
     interjectQueue = [];
     els.chatLog.innerHTML = '';
     els.chatLog.appendChild(els.welcome);
+    if (els.topicInput) els.topicInput.value = '';
     syncControls();
+    // 服务端只清手动对谈残留的场景备注，自动闲聊的一切状态（话题、历史、总结、心动回忆）都不受影响
+    fetch('/api/clear', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+      .then((r) => r.json())
+      .then(() => { fetchState(); toast('已清空手动对谈，自动闲聊不受影响'); })
+      .catch(() => {});
   }
 
   function syncControls() {
@@ -461,14 +494,59 @@
     scrollToBottom();
   }
 
+  function beijingClockLabel() {
+    const bj = new Date(Date.now() + 8 * 3600 * 1000);
+    const hh = String(bj.getUTCHours()).padStart(2, '0');
+    const mm = String(bj.getUTCMinutes()).padStart(2, '0');
+    const h = bj.getUTCHours();
+    const period = h >= 5 && h < 8 ? '清晨' : h >= 8 && h < 11 ? '上午' : h >= 11 && h < 14 ? '中午' : h >= 14 && h < 17 ? '下午' : h >= 17 && h < 20 ? '傍晚' : h >= 20 && h < 23 ? '晚上' : '深夜';
+    return '北京时间 ' + hh + ':' + mm + ' · ' + period;
+  }
+
+  function updateBeijingClock() {
+    if (!els.beijingTimeChip) return;
+    els.beijingTimeChip.textContent = beijingClockLabel();
+    els.beijingTimeChip.hidden = false;
+  }
+
   function updateAutoPanel(data) {
     els.autoPanel.classList.toggle('running', data.autoChatEnabled);
     els.autoStatusText.textContent = data.autoChatEnabled ? '自动闲聊：运行中' : '自动闲聊：未开启';
+    if (els.giftBar) els.giftBar.hidden = !data.autoChatEnabled;
     if (data.autoChatEnabled && data.currentTopic) {
       els.topicChip.textContent = '当前话题：' + data.currentTopic;
       els.topicChip.hidden = false;
     } else {
       els.topicChip.hidden = true;
+    }
+    if (data.sceneText) {
+      els.sceneTextChip.textContent = data.sceneText;
+      els.sceneTextChip.hidden = false;
+      if (els.manualSceneChip) els.manualSceneChip.textContent = data.sceneText;
+      if (els.manualEnv) els.manualEnv.hidden = false;
+    } else {
+      els.sceneTextChip.hidden = true;
+    }
+    if (els.heartChip) {
+      const h = (data.heartMoments || []).filter(Boolean);
+      if (h.length) {
+        els.heartChip.textContent = '还记得：' + h[0].slice(0, 26) + (h[0].length > 26 ? '…' : '');
+        els.heartChip.hidden = false;
+      } else {
+        els.heartChip.hidden = true;
+      }
+    }
+    if (els.weatherChip) {
+      const wmap = { sunny: '☀ 晴', cloudy: '☁ 多云', rain: '☂ 小雨', wind: '🌬 大风', snow: '❄ 雪' };
+      if (data.weather && wmap[data.weather]) {
+        els.weatherChip.textContent = '今日天气：' + wmap[data.weather];
+        els.weatherChip.hidden = false;
+        if (els.manualWeatherChip) {
+          els.manualWeatherChip.textContent = '今日天气：' + wmap[data.weather];
+        }
+      } else {
+        els.weatherChip.hidden = true;
+      }
     }
     if (data.autoChatEnabled && els.topicPanelBtn.textContent === '话题投票') {
       els.topicPanelBtn.textContent = '收起投票';
@@ -512,8 +590,10 @@
     scrollToBottom();
   }
 
-  function renderNewAutoEntries(log) {
+  async function renderNewAutoEntries(log) {
     if (!log.length) return;
+    const newEntries = log.filter((e) => e.id > lastAutoMsgId);
+    if (!newEntries.length) return;
     const maxId = log[log.length - 1].id;
     // 服务器重启导致编号回退时，整体重绘
     if (maxId < lastAutoMsgId) {
@@ -522,16 +602,22 @@
       renderAutoLog(log);
       return;
     }
+    // 角色说话前先亮一下「输入中」，让自动闲聊更有活人感
     suppressScroll = true;
-    for (const entry of log) {
-      if (entry.id > lastAutoMsgId) {
-        if (entry.type === 'system') {
-          appendSystem(entry.text, els.autoChatLog);
-        } else {
-          appendMessageSplit(entry.type, entry.text, els.autoChatLog);
-        }
-        lastAutoMsgId = entry.id;
+    for (const entry of newEntries) {
+      if (entry.type === 'system') {
+        appendSystem(entry.text, els.autoChatLog);
+      } else {
+        const tw = appendTyping(entry.type, els.autoChatLog);
+        await sleepMs(650 + Math.random() * 550);
+        removeTyping(tw);
+        await sleepMs(120 + Math.random() * 180);
+        appendMessageSplit(entry.type, entry.text, els.autoChatLog);
       }
+      lastAutoMsgId = entry.id;
+      suppressScroll = false;
+      scrollToBottom();
+      suppressScroll = true;
     }
     suppressScroll = false;
     scrollToBottom();
@@ -947,14 +1033,21 @@
     history.push({ speaker, text });
 
     const typingRow = appendTyping(speaker);
-    await sleepMs(500 + Math.random() * 500);
+    const typingMs = Math.min(2600, 450 + Array.from(text).length * 16) + Math.random() * 400;
+    await sleepMs(typingMs);
     removeTyping(typingRow);
     if (stopRequested) return false;
+
+    if (parts.length === 1 && /^[\s，。！？!?…—、；：,.!?~～…·]+$/.test(parts[0]) && mergePunctOnly(speaker, parts[0])) {
+      await maybeSummarizeManual();
+      return true;
+    }
 
     for (let i = 0; i < parts.length; i++) {
       appendMessage(speaker, parts[i]);
       if (i < parts.length - 1) {
-        await sleepMs(700 + Math.random() * 700);
+        const endsStrong = /[！？。!?…—]$/.test(parts[i]);
+        await sleepMs(endsStrong ? 800 + Math.random() * 600 : 620 + Math.random() * 520);
         if (stopRequested) return false;
       }
     }
@@ -1456,10 +1549,36 @@
         fetchSummaries();
       }
     });
+    els.giftBar.querySelectorAll('.gift-btn').forEach((btn) => {
+      btn.addEventListener('click', () => sendGift(btn.dataset.gift, btn));
+    });
     els.proposeBtn.addEventListener('click', proposeTopic);
     els.topicProposalInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') proposeTopic();
     });
+  }
+
+  async function sendGift(giftId, btn) {
+    if (!giftId || btn.disabled) return;
+    btn.disabled = true;
+    try {
+      const res = await fetch('/api/gift', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ voterId: viewerId, giftId })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        toast('送出了礼物～');
+        setTimeout(() => { btn.disabled = false; }, data.cooldownMs || 20000);
+      } else {
+        toast(data.error || '送礼失败');
+        btn.disabled = false;
+      }
+    } catch (err) {
+      toast('送礼失败，请重试');
+      btn.disabled = false;
+    }
   }
 
   // ---------- 启动 ----------
@@ -1482,8 +1601,21 @@
       })
       .catch(() => {});
     pollTimer = setInterval(fetchState, 3000);
+    updateBeijingClock();
+    clockTimer = setInterval(updateBeijingClock, 30000);
     fetchState().then(() => {
       initialized = true;
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+        if (clockTimer) { clearInterval(clockTimer); clockTimer = null; }
+      } else if (!pollTimer) {
+        fetchState();
+        pollTimer = setInterval(fetchState, 3000);
+        updateBeijingClock();
+        clockTimer = setInterval(updateBeijingClock, 30000);
+      }
     });
   }
 

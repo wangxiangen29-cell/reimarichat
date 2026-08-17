@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>红白与黑白 · 灵梦 × 魔理沙</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23e8dcae'/%3E%3Ccircle cx='24' cy='24' r='7' fill='%23b8a876' opacity='0.5'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style.css?v=14">
+  <link rel="stylesheet" href="style.css?v=26">
 </head>
 <body>
   <!-- 夜空背景 -->
@@ -48,6 +48,10 @@
     </nav>
 
     <div class="view" id="manualView">
+      <div class="manual-env" id="manualEnv" hidden>
+        <span class="topic-chip scene-chip" id="manualSceneChip"></span>
+        <span class="topic-chip weather-chip" id="manualWeatherChip"></span>
+      </div>
       <main class="chat">
         <div class="chat-log" id="chatLog" role="log" aria-live="polite">
           <div class="welcome" id="welcome">
@@ -239,8 +243,21 @@
           <span class="auto-dot" id="autoDot"></span>
           <span id="autoStatusText">自动闲聊：未开启</span>
           <span class="topic-chip" id="topicChip" hidden></span>
+          <span class="topic-chip" id="beijingTimeChip" hidden></span>
+          <span class="topic-chip scene-chip" id="sceneTextChip" hidden></span>
+          <span class="topic-chip heart-chip" id="heartChip" hidden></span>
+          <span class="topic-chip weather-chip" id="weatherChip" hidden></span>
           <button class="btn small" id="topicPanelBtn" disabled>话题投票</button>
           <button class="btn small" id="summaryPanelBtn" type="button">总结</button>
+        </div>
+        <div class="gift-bar" id="giftBar" hidden>
+          <span class="gift-label">投喂</span>
+          <button class="gift-btn" data-gift="dango" title="一串琥珀色的烤团子" type="button">🍡 团子</button>
+          <button class="gift-btn" data-gift="mushroom" title="三颗胖乎乎的鲜蘑菇" type="button">🍄 蘑菇</button>
+          <button class="gift-btn" data-gift="blossom" title="一枝沾着露水的樱花" type="button">🌸 樱花</button>
+          <button class="gift-btn" data-gift="tea" title="一包后院新焙的茶叶" type="button">🍵 茶叶</button>
+          <button class="gift-btn" data-gift="coin" title="一枚亮闪闪的香油钱" type="button">🪙 香火钱</button>
+          <button class="gift-btn" data-gift="book" title="一本“暂时借来”的魔法书" type="button">📖 魔法书</button>
         </div>
         <div class="vote-panel" id="votePanel" hidden>
           <div class="vote-list" id="voteList"></div>
@@ -311,7 +328,7 @@
     </div>
   </div>
 
-  <script src="demo.js?v=14"></script>
-  <script src="app.js?v=14"></script>
+  <script src="demo.js?v=26"></script>
+  <script src="app.js?v=26"></script>
 </body>
 </html>

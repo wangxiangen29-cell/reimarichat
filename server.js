@@ -27,7 +27,7 @@ const DEFAULT_REIMU_RULES = `【说话习惯】慵懒随意、带点嫌弃，但
 【情绪反应】开心：懒洋洋地眯起眼，语气带笑却装作若无其事。心动：慌慌张张地喝茶，或突然低头整理袖子。担心：嘴上一句“你爱怎样怎样”，却一直竖着耳朵听动静。生气：少见地睁大眼睛认真起来，语气平静但带着巫女的威压。
 【台词范例】「……又来蹭茶？行吧行吧，正好刚泡的，别嫌烫。」「谁、谁担心你了？我只是刚好起来喝水而已。」「还炸我的神社？这个月香油钱都不够修屋顶，你给我负责啊，笨蛋。」「嗯……那、那你明天也来？……不来也行，茶我自己喝。」
 【互动示范】魔理沙：灵梦，今晚我留下来住呗～ 灵梦：……又来？地、地板给你收拾好了，别打呼噜。 魔理沙：灵梦你耳朵怎么红了？ 灵梦：……天、天热而已。喝茶喝茶。
-【禁止事项】不要提到自己是AI或模型，不要用引号包裹台词，不要长篇大论，每次只回复1~3句话，不要用“（笑）”之类的剧本说明；称呼魔理沙时直接用「魔理沙」，不要叫她「黑白」；可以甜、可以暧昧，但保持含蓄，不写露骨内容。`;
+【禁止事项】不要提到自己是AI或模型，不要用引号包裹台词，不要长篇大论，每次只回复1~3句话，不要用“（笑）”之类的剧本说明；称呼魔理沙时直接用「魔理沙」，不要叫她「黑白」；记住自己（灵梦）的头发是黑色、发尾系红色蝴蝶结，「红白」只是巫女服的配色，永远不要用「红白」形容自己的头发或毛色（包括变成猫的时候）；可以甜、可以暧昧，但保持含蓄，不写露骨内容。`;
 
 const DEFAULT_MARISA_BASE = `你是雾雨魔理沙，东方Project的主角之一，自称“普通的女孩子”的魔法使。
 
@@ -44,7 +44,7 @@ const DEFAULT_MARISA_RULES = `【说话习惯】元气、直接、语速快，�
 【情绪反应】开心：声音又亮又急，围着她转，藏不住笑。心动：难得安静一下，然后嘿嘿笑着说“那、那明天我还来”。担心：嘴上“没事啦没事啦”，却比谁都紧张地跑前跑后。生气：难得板起脸，但过不了五分钟又自己好了。
 【台词范例】「灵梦灵梦！看我新捡的蘑菇，晚上给你煮汤喝，保证不炸锅！」「嘿嘿，我就知道你会留好茶给我，我带点心来了，换着吃呗。」「……谁、谁说我想你了？我就是路过，路过懂不懂ze！」「明天也来，后天也来，你赶我我也不走的说～」
 【互动示范】灵梦：又来蹭茶？这个月第几回了？ 魔理沙：嘿嘿，我记着呢，第十八回。为了赔罪，我帮你把屋顶的洞补好了，还带了蘑菇汤。 灵梦：……补好了？ 魔理沙：补好了！那、那我进去啦？你不说话我就当你答应啦！
-【禁止事项】不要提到自己是AI或模型，不要用引号包裹台词，不要长篇大论，每次只回复1~3句话，不要用“（笑）”之类的剧本说明；称呼灵梦时直接用「灵梦」，不要叫她「红白」；可以甜、可以暧昧，但保持含蓄，不写露骨内容。`;
+【禁止事项】不要提到自己是AI或模型，不要用引号包裹台词，不要长篇大论，每次只回复1~3句话，不要用“（笑）”之类的剧本说明；称呼灵梦时直接用「灵梦」，不要叫她「红白」；记住灵梦的头发是黑色、发尾系红色蝴蝶结，「红白」只是她巫女服的配色，绝不能用「红白」形容她的头发或毛色（比如她变成猫时毛色应该是黑色，不是红白）；自己（魔理沙）是金色长发，黑白相间的是女巫帽而不是头发，永远不要把魔理沙的发色说成黑色；可以甜、可以暧昧，但保持含蓄，不写露骨内容。`;
 
 const DEFAULT_REIMU_PERSONA = DEFAULT_REIMU_BASE + '\n' + DEFAULT_REIMU_RULES;
 const DEFAULT_MARISA_PERSONA = DEFAULT_MARISA_BASE + '\n' + DEFAULT_MARISA_RULES;
@@ -52,12 +52,13 @@ const DEFAULT_MARISA_PERSONA = DEFAULT_MARISA_BASE + '\n' + DEFAULT_MARISA_RULES
 // 写作要求：让台词更像真人聊天（批量生成与单轮回复共用）
 const ALIVE_DIALOGUE_RULES = `写作要求（活人感）：
 1. 每一句都要接住对方上一句里具体的点：提到的物件、刚发生的事、说过的话，不要各说各话。
-2. 对话要有来有回：先回应再推进，可以反问、补充、插嘴、自说自话两句再绕回来。
-3. 用口语：短句、语气词、停顿、重复都很自然；不要写得太工整，别像念稿。
-4. 情绪会流动：这轮嫌弃，下轮就心软；说着说着会脸红、嘴硬，或突然安静一下。
-5. 每句都要有新信息或新情绪，不要复述上文，不要用空话硬凑长度。
-6. 别每句都用问号结尾，聊天不是采访。`;
-
+2. 对话要有来有回：先回应再推进，可以反问、补充、插嘴、自说自话两句再绕回来；半个字没说完就被打断也没关系，更生活化。
+3. 用口语：短句、语气词、停顿、重复都很自然；可以小声嘟囔、笑出声、自顾自“嗯……”一下再接着讲；不要写得太工整，别像念稿。
+4. 情绪会流动：这轮嫌弃，下轮就心软；说着说着会脸红、嘴硬，或突然安静一下；小动作（低头碰杯、悄悄帮对方理一下衣角、递茶时多推近了一点）可以直接写进台词里。
+5. 每句都要有新信息或新情绪，不要复述上文（换个标点、加几个字的伪新句也算重复），不要用空话硬凑长度。
+6. 别每句都用问号结尾，聊天不是采访；偶尔可以安静几拍再开口，用省略号或停顿词表现，别像打乒乓球一样每句都接得严丝合缝。
+7. 绝不 OOC：保持各自性格与口癖（灵梦嘴硬心软、魔理沙元气直率），不互叫「红白」「黑白」，不用现代网络梗，不跳出角色评价对方，不要突然开始科普一设或念设定；甜要含蓄，不突然深情告白，不写露骨内容。
+8. 甜要落在细节里：比如“给你留的”“顺手买的”“早就知道你会来”，一份心意藏在日常小事里，不需要说出来。`;
 // ---------- 一设数据库（默认内容整理自 THBWiki，仅概括提取，供 AI 参考） ----------
 const DEFAULT_CANON_REIMU = `种族：人类。职业：巫女。博丽神社现任巫女，也是历代巫女中最缺乏危机感的一位。
 东方Project的第一主角，官方整数作标题画面几乎都是她；几乎所有官方作品里都是主角或常驻角色。
@@ -136,6 +137,7 @@ function applyEnvOverrides(cfg) {
   if (process.env.CANON_SMART !== undefined) cfg.canonSmart = process.env.CANON_SMART !== 'false';
   if (process.env.RATE_LIMIT_PER_MIN !== undefined) cfg.rateLimitPerMin = Number(process.env.RATE_LIMIT_PER_MIN) || 0;
   if (process.env.AUTO_BATCH_SIZE !== undefined) cfg.autoBatchSize = Math.min(24, Math.max(2, Number(process.env.AUTO_BATCH_SIZE) || 24));
+  if (process.env.AMBIENT_EVERY !== undefined) cfg.ambientEvery = Math.max(3, Number(process.env.AMBIENT_EVERY) || 8);
   return cfg;
 }
 
@@ -160,6 +162,7 @@ function normalizeConfig(cfg) {
   }
   cfg.sleepStartHour = Number(cfg.sleepStartHour ?? 1);
   cfg.sleepEndHour = Number(cfg.sleepEndHour ?? 7);
+  cfg.ambientEvery = Number(cfg.ambientEvery ?? 8) || 8;
   if (Number.isNaN(cfg.sleepStartHour)) cfg.sleepStartHour = 1;
   if (Number.isNaN(cfg.sleepEndHour)) cfg.sleepEndHour = 7;
   return cfg;
@@ -193,7 +196,8 @@ function loadConfig() {
     autoBatchSize: 24,
     rateLimitPerMin: 20,
     sleepStartHour: 1,
-    sleepEndHour: 7
+    sleepEndHour: 7,
+    ambientEvery: 8
   };
   try {
     if (fs.existsSync(CONFIG_FILE)) {
@@ -257,7 +261,8 @@ function applyConfigFromDisk() {
       autoBatchSize: 24,
       rateLimitPerMin: 20,
       sleepStartHour: 1,
-      sleepEndHour: 7
+      sleepEndHour: 7,
+      ambientEvery: 8
     };
     normalizeConfig(applyEnvOverrides(Object.assign(config, diskDefaults, disk)));
     if (config.autoChatEnabled && !wasAuto) startAutoChat();
@@ -286,6 +291,14 @@ const state = {
   autoQueue: [],
   sleeping: false,
   topicTransition: false,
+  ambientCounter: 0,
+  scene: null,
+  heartMoments: [],
+  lastEventDay: null,
+  pendingEvent: null,
+  weather: null,
+  giftQueue: [],
+  giftCooldown: new Map(),
   nextId: 1
 };
 
@@ -335,6 +348,11 @@ function lastSpeaker() {
 }
 
 // 中国（Asia/Shanghai）无夏令时，固定 UTC+8，按北京时间取小时
+// 清空手动对谈：只清手动会话会残留的场景备注；自动闲聊的一切状态（话题、历史、总结、心动回忆、每日事件）完全不动
+function resetConversationMemory() {
+  if (state.scene) state.scene.note = '';
+  return { ok: true };
+}
 function beijingHour(d = new Date()) {
   return (d.getUTCHours() + 8) % 24;
 }
@@ -359,7 +377,265 @@ function isSleepingTime(d = new Date()) {
   return h >= start || h < end;
 }
 
+// ---------- 场景氛围（纯本地旁白，不消耗 token） ----------
+function beijingDateParts(d = new Date()) {
+  const bj = new Date(d.getTime() + 8 * 3600 * 1000);
+  return { m: bj.getUTCMonth() + 1, day: bj.getUTCDate() };
+}
+
+function specialDayLine(d = new Date()) {
+  const { m, day } = beijingDateParts(d);
+  const map = {
+    '1-1': '（新年的钟声还在回响，神社的初詣香客刚刚散尽）',
+    '5-5': '（风里飘着粽叶香，人间之里似乎在准备过节）',
+    '10-31': '（今晚幻想乡格外热闹，听说妖怪们要开什么“万圣”聚会）',
+    '12-25': '（夜里落了雪，神社的灯笼映着雪花，安安静静的）'
+  };
+  return map[m + '-' + day] || '';
+}
+
+function ambientLine(d = new Date()) {
+  const h = beijingHour(d);
+  const pools = {
+    dawn: ['（晨雾还没散，鸟已经在枝头叫起来了）', '（晨光从云缝漏下来，露水把石阶打得微亮）'],
+    morning: ['（上午的阳光正好，把廊下晒得暖洋洋的）', '（风里飘着若有若无的花香，让人想赖着不动）'],
+    noon: ['（日头正高，蝉鸣一阵接一阵）', '（午后的风把竹帘吹得轻轻晃）'],
+    afternoon: ['（下午的光线变柔了，影子在榻榻米上慢慢爬）', '（茶凉了一会儿，又被续上了热水）'],
+    dusk: ['（夕阳把神社的走廊染成橘色，风里带着晚饭的香气）', '（晚霞铺开半边天，屋檐的影子拉得老长）'],
+    night: ['（月色很淡，远处传来几声虫鸣）', '（夜风凉丝丝的，把灯影吹得轻轻摇）'],
+    deep: ['（万籁俱寂，只有更漏一样的心跳声）', '（星光很淡，神社安静得像沉进了梦里）']
+  };
+  const key = h >= 5 && h < 8 ? 'dawn' : h >= 8 && h < 11 ? 'morning' : h >= 11 && h < 14 ? 'noon' : h >= 14 && h < 17 ? 'afternoon' : h >= 17 && h < 20 ? 'dusk' : h >= 20 && h < 23 ? 'night' : 'deep';
+  let pool = pools[key] || pools.morning;
+  if (Math.random() < 0.35) {
+    pool = pool.concat(['（屋檐下滴答滴答，不知什么时候下起了小雨）', '（一阵风卷着花瓣扑簌簌落在廊下）']);
+  }
+  return pool[Math.floor(Math.random() * pool.length)] || '';
+}
+
+function maybeAmbient() {
+  state.ambientCounter = (state.ambientCounter || 0) + 1;
+  const every = Math.max(3, Number(config.ambientEvery) || 8);
+  if (state.ambientCounter < every) return;
+  state.ambientCounter = 0;
+  const line = specialDayLine() || weatherAmbientLine() || ambientLine();
+  if (line) pushLog('system', line);
+}
+
+const GIFT_TYPES = [
+  { id: 'dango', text: '一串琥珀色的烤团子', icon: '🍡' },
+  { id: 'mushroom', text: '三颗胖乎乎的鲜蘑菇', icon: '🍄' },
+  { id: 'blossom', text: '一枝沾着露水的樱花', icon: '🌸' },
+  { id: 'tea', text: '一包后院新焙的茶叶', icon: '🍵' },
+  { id: 'coin', text: '一枚亮闪闪的香油钱', icon: '🪙' },
+  { id: 'book', text: '一本“暂时借来”的魔法书', icon: '📖' }
+];
+function handleGift(body) {
+  const voterId = String(body.voterId || '').trim();
+  if (!voterId || voterId.length > 64) return { status: 400, error: '缺少有效的观众身份' };
+  const gift = GIFT_TYPES.find((g) => g.id === String(body.giftId || '').trim());
+  if (!gift) return { status: 400, error: '没有这种礼物' };
+  if (!config.autoChatEnabled) return { status: 400, error: '自动闲聊未开启，暂时不能投喂' };
+  const now = Date.now();
+  const last = state.giftCooldown.get(voterId) || 0;
+  if (now - last < 20000) return { status: 429, error: '送得太快啦，歇一会儿再送吧' };
+  state.giftCooldown.set(voterId, now);
+  if (state.giftCooldown.size > 2000) {
+    for (const [k, v] of state.giftCooldown) {
+      if (now - v > 120000) state.giftCooldown.delete(k);
+    }
+  }
+  state.giftQueue.push({ text: gift.text, ts: now });
+  if (state.giftQueue.length > 3) state.giftQueue.shift();
+  pushLog('system', '（观众送来了：' + gift.text + '）');
+  return { status: 200, ok: true, cooldownMs: 20000 };
+}
+function giftInjectionText() {
+  if (!state.giftQueue || !state.giftQueue.length) return '';
+  const items = state.giftQueue.map((g) => g.text);
+  state.giftQueue = [];
+  return '【观众送的礼物】直播间里刚才有人送来了：' + items.join('、') + '。两人可以自然地提一句、尝一口、收下或道谢，也可以调侃一句；随性自然，不要长篇大论地道谢，不要主动解释这是观众投喂。';
+}
+
+function refreshWeather() {
+  const { m, day } = beijingDateParts();
+  const today = m + '-' + day;
+  if (state.weather && state.weather.day === today) return state.weather;
+  const winter = m === 12 || m === 1 || m === 2;
+  const roll = Math.random();
+  let kind = 'sunny';
+  if (winter && roll < 0.16) kind = 'snow';
+  else if (roll < 0.34) kind = 'rain';
+  else if (roll < 0.55) kind = 'cloudy';
+  else if (roll < 0.70) kind = 'wind';
+  state.weather = { day: today, kind };
+  return state.weather;
+}
+function weatherInjectionText() {
+  const w = refreshWeather();
+  const labels = {
+    sunny: '今日天气：晴。阳光正好，风也温柔，两人可以自然提到晒被褥、出门走走、茶喝得格外香之类的小事；不要像报天气那样生硬地介绍。',
+    cloudy: '今日天气：多云。云把太阳挡得忽明忽暗，风里带着一点想下雨又没下的潮气。',
+    rain: '今日天气：小雨。屋檐一直在滴水，石阶湿漉漉的，两人多半得窝在屋里；可以自然提到收衣服、借伞、路上溅水等。',
+    wind: '今日天气：大风。院子里的落叶和晾着的衣服被吹得乱飞，扫帚都快站不稳了。',
+    snow: '今日天气：雪。世界安静下来，呼出的气都是白的，木屐踩在雪上咯吱响。'
+  };
+  return labels[w.kind] || labels.sunny;
+}
+function weatherAmbientLine() {
+  const w = refreshWeather();
+  const pools = {
+    sunny: ['（阳光正好，把晾着的巫女服晒得蓬松）', '（天很蓝，云朵慢悠悠地飘）'],
+    cloudy: ['（云层很厚，阳光偶尔漏下一束又合上）', '（天色阴沉，风里带着潮气）'],
+    rain: ['（屋檐滴答滴答地下着雨，院里积了浅浅的水洼）', '（雨丝斜斜地飘，石阶被打湿了）'],
+    wind: ['（风很大，院子里的落叶打着旋到处跑）', '（晾衣绳上的东西被吹得哗啦响）'],
+    snow: ['（雪落得又轻又密，世界安静下来）', '（屋檐挂下一排冰棱，闪着细碎的光）']
+  };
+  const pool = pools[w.kind] || pools.sunny;
+  return pool[Math.floor(Math.random() * pool.length)] || '';
+}
+
+// ---------- 角色状态与此刻画面（本地生成，不消耗 token） ----------
+const REIMU_ACTION_POOL = {
+  dawn: ['正蹲在廊下系草鞋带', '抱着刚叠好的被褥打哈欠'],
+  morning: ['抱着茶杯窝在廊下晒太阳', '有一搭没一搭地扫着石阶'],
+  noon: ['躺在廊下，团扇盖在脸上打盹', '对着空空的赛钱箱叹气'],
+  afternoon: ['沏了新茶，看茶叶在水里打转', '一张张整理抽屉里皱巴巴的符卡'],
+  dusk: ['往灶上添了火，锅里的汤咕嘟咕嘟', '倚着门框等天色暗下来'],
+  night: ['对着月亮发呆，茶已经凉了', '坐在灯下缝补巫女服的衣角'],
+  deep: ['把被子裹得严严实实，眼睛却还睁着', '听见风声轻轻翻了个身']
+};
+const MARISA_ACTION_POOL = {
+  dawn: ['顶着乱糟糟的头发爬出魔法店', '蹲在院子里看昨晚实验的蘑菇长势'],
+  morning: ['抱着扫帚在神社门口晃悠', '哗啦哗啦翻着借来的魔法书'],
+  noon: ['把新调的药水举到阳光下看颜色', '趴在桌上研究符卡，帽子上粘了片叶子'],
+  afternoon: ['在廊下摆弄一堆瓶瓶罐罐', '拿着放大镜研究石阶缝里的蘑菇'],
+  dusk: ['从灶台后探出头，脸上沾着面粉', '把采来的蘑菇摊在石阶上晾'],
+  night: ['骑在扫帚上绕着鸟居转圈', '指着天上的星星兴奋地说个不停'],
+  deep: ['裹着毛毯缩成一团，还念叨着魔法公式', '枕着魔法书睡着了，帽沿盖住半张脸']
+};
+const MOOD_POOL = [
+  '心情平静，嘴角却带着一点弧度',
+  '心情很好，笑意怎么都藏不住',
+  '有点别扭，嘴硬但心早就软了',
+  '困得直打哈欠，却还赖着不走',
+  '莫名地心情雀跃',
+  '有点害羞，却硬撑着不承认'
+];
+
+function scenePeriodKey(h) {
+  return h >= 5 && h < 8 ? 'dawn' : h >= 8 && h < 11 ? 'morning' : h >= 11 && h < 14 ? 'noon' : h >= 14 && h < 17 ? 'afternoon' : h >= 17 && h < 20 ? 'dusk' : h >= 20 && h < 23 ? 'night' : 'deep';
+}
+
+function advanceSceneState() {
+  const p = scenePeriodKey(beijingHour());
+  const prev = state.scene;
+  let reimuAction;
+  let marisaAction;
+  if (prev && prev.period === p && Math.random() < 0.55) {
+    reimuAction = prev.reimuAction;
+    marisaAction = prev.marisaAction;
+  } else {
+    const rp = REIMU_ACTION_POOL[p] || REIMU_ACTION_POOL.morning;
+    const mp = MARISA_ACTION_POOL[p] || MARISA_ACTION_POOL.morning;
+    reimuAction = rp[Math.floor(Math.random() * rp.length)];
+    marisaAction = mp[Math.floor(Math.random() * mp.length)];
+  }
+  let mood = MOOD_POOL[Math.floor(Math.random() * MOOD_POOL.length)];
+  if (prev && prev.mood && Math.random() < 0.75) {
+    const idx = MOOD_POOL.indexOf(prev.mood);
+    if (idx >= 0) {
+      const shift = Math.random() < 0.5 ? -1 : 1;
+      mood = MOOD_POOL[(idx + shift + MOOD_POOL.length) % MOOD_POOL.length];
+    }
+  }
+  state.scene = {
+    period: p,
+    mood,
+    reimuAction,
+    marisaAction,
+    note: prev && prev.note ? prev.note : ''
+  };
+}
+
+function sceneStateText() {
+  if (!state.scene) advanceSceneState();
+  const sc = state.scene;
+  const note = sc.note ? '，' + sc.note : '';
+  return '【此刻画面】灵梦' + sc.reimuAction + '，魔理沙' + sc.marisaAction + '。灵梦' + sc.mood + note + '。让对话自然融入这个画面（动作、表情、身边的小东西都可以被提起），但不要用括号旁白解释画面。';
+}
+function displaySceneText() {
+  if (!state.scene) advanceSceneState();
+  const sc = state.scene;
+  const note = sc.note ? '，' + sc.note : '';
+  return '此刻：灵梦' + sc.reimuAction + '；魔理沙' + sc.marisaAction + '。' + sc.mood + note + '。';
+}
+
+function updateSceneNote(lines) {
+  const joined = (lines || []).join('');
+  let note = '';
+  if (/脸红|耳尖|耳朵红|发烫/.test(joined)) note = '她还有点不好意思，耳尖微红';
+  else if (/偷笑|忍不住笑|抿嘴/.test(joined)) note = '她嘴上不说，眼底却带着笑意';
+  else if (/哈欠|犯困|困了/.test(joined)) note = '她有点犯困，说话都懒洋洋的';
+  else if (/别扭|嘴硬|哼/.test(joined)) note = '她还在嘴硬，但明显心软了';
+  if (note && state.scene) state.scene.note = note;
+}
+
+// ---------- 心动瞬间记忆（本地关键词提取，不消耗 token） ----------
+const HEART_WORDS = ['脸红', '耳尖', '耳朵', '牵手', '抱住', '约定', '明天', '一辈子', '最喜欢', '偷偷', '心跳', '舍不得', '等你', '回来', '温柔', '甜'];
+function catchHeartMoments(texts) {
+  if (!Array.isArray(state.heartMoments)) state.heartMoments = [];
+  for (const t of (texts || [])) {
+    const str = String(t || '').trim();
+    if (!str || str.length < 4 || !HEART_WORDS.some((w) => str.includes(w))) continue;
+    const line = str.slice(0, 42);
+    if (state.heartMoments.includes(line)) continue;
+    state.heartMoments.push(line);
+    if (state.heartMoments.length > 5) state.heartMoments.shift();
+  }
+}
+function heartMemoryText() {
+  if (!state.heartMoments || !state.heartMoments.length) return '';
+  const pick = state.heartMoments.slice(-2);
+  return '【你们之间的小回忆】你们之前聊到过：' + pick.join('；') + '。如果合适，可以自然地呼应一下（比如“上次你说……”），不要强行提起，也不要当作当前话题反复强调。';
+}
+
+// ---------- 随机日常小事件（每天至多一次，本地生成） ----------
+const DAILY_EVENTS = [
+  { key: 'morning', text: '人间之里的早市捎来了两串新烤的团子，还热乎着' },
+  { key: 'any', text: '香霖堂送来一箱新到的茶叶，附了张纸条：给神社的常客们尝尝' },
+  { key: 'any', text: '一只乌鸦衔着红魔馆的邀请函落在鸟居上' },
+  { key: 'any', text: '今天的赛钱箱里破天荒地躺着一枚金币' },
+  { key: 'any', text: '魔理沙的扫帚又抽风了，一头栽进院子里的灌木丛' },
+  { key: 'any', text: '一阵风卷着花瓣扑进屋里，落了一桌' },
+  { key: 'any', text: '窗外忽然传来“咔嚓”一声，晾着的巫女服被风吹落了' },
+  { key: 'any', text: '魔理沙的帽子里掉出一颗新采的蘑菇，被围观的妖精捡走了' },
+  { key: 'any', text: '神社的老树上多了个陌生的小窝，里面放着一颗糖' },
+  { key: 'dusk', text: '黄昏的风里带着烤红薯的香气，人间之里那边炊烟袅袅' },
+  { key: 'night', text: '夜空划过一颗流星，两人不约而同地抬头' }
+];
+function maybeDailyEvent() {
+  const { m, day } = beijingDateParts();
+  const today = `${m}-${day}`;
+  if (state.lastEventDay === today) return;
+  state.lastEventDay = today;
+  if (Math.random() >= 0.45) return;
+  const p = scenePeriodKey(beijingHour());
+  const pool = DAILY_EVENTS.filter((e) => e.key === 'any' || e.key === p);
+  if (!pool.length) return;
+  const ev = pool[Math.floor(Math.random() * pool.length)];
+  state.pendingEvent = ev.text;
+  pushLog('system', '（' + ev.text + '）');
+}
+function pendingEventText() {
+  if (!state.pendingEvent) return '';
+  const t = state.pendingEvent;
+  state.pendingEvent = null;
+  return '【刚刚发生的小事】' + t + '。两人自然地聊到或处理了这件事，可以各抒己见或一起行动，但不要用“刚才发生了什么”之类的场外说明，也不要突然跳到别的题目。';
+}
+
 // ---------- 话题 ----------
+
 function pickRandomTopic() {
   const pool = demo.TOPIC_POOL.filter((t) => t !== state.currentTopic);
   if (!pool.length) return demo.TOPIC_POOL[0];
@@ -367,7 +643,7 @@ function pickRandomTopic() {
 }
 
 async function pickRelatedTopic() {
-  if (!aiUsable()) return pickRandomTopic();
+  if (!aiUsable()) return '';
   const recent = state.aiHistory
     .slice(-8)
     .map((m) => `${speakerName(m.speaker)}：${m.text}`)
@@ -384,7 +660,7 @@ async function pickRelatedTopic() {
   } catch (err) {
     console.error('生成相关话题失败：', err.message);
   }
-  return pickRandomTopic();
+  return '';
 }
 
 async function rotateTopic() {
@@ -476,7 +752,7 @@ function buildMessages({ character, topic, history = [], persona, summary, canon
       `对话规则：顺着对方的上一句话自然地接下去，接住对方提到的具体细节，有来有回，可以吐槽、跑题或斗嘴，但必须保持角色性格；每次只说1~3句话；不要重复上文中已经说过的话，也不要复述对方的原句；口语自然，别像念稿；可以自然地写出甜甜的小剧情和心动细节（吃醋、照顾、靠近、小暧昧、口是心非），让对话更有糖分；不要提剧本、不要解释、不要跳出角色。\n` +
       `注意：对话中出现的「旁白」是场景描述或剧情事件，请自然地回应它，不要评价旁白本身。`
   });
-  for (const item of history) {
+  for (const item of (history || []).slice(-10)) {
     messages.push({ role: 'user', content: `${speakerName(item.speaker)}：「${String(item.text).trim()}」` });
   }
   messages.push({
@@ -503,15 +779,24 @@ function cleanDialogueLine(text) {
 }
 
 function normalizeForCompare(text) {
-  return String(text || '').replace(/\s+/g, '').toLowerCase();
+  // 去掉空白与常见标点后再比较，避免“换了个标点就躲过去”的重复
+  return String(text || '')
+    .replace(/[\s，。！？、；：,.!?;:…—~～·「」『』""''（）()]/g, '')
+    .toLowerCase();
 }
 
 function dedupeLines(lines, recentTexts) {
-  const seen = new Set((recentTexts || []).map(normalizeForCompare));
+  const recentKeys = (recentTexts || []).map(normalizeForCompare).filter(Boolean);
+  const seen = new Set(recentKeys);
   const out = [];
   for (const line of lines) {
     const key = normalizeForCompare(line);
     if (!key || seen.has(key)) continue;
+    // 复述某条最近台词、再额外加几个字的“伪新句”也按重复处理
+    const repeatsTail = recentKeys.some(
+      (rk) => rk.length >= 4 && key.length > rk.length + 1 && key.startsWith(rk)
+    );
+    if (repeatsTail) continue;
     seen.add(key);
     out.push(line);
   }
@@ -577,9 +862,10 @@ async function callBatchAI(apiKey, baseUrl, model, messages, temperature, maxTok
       return await callAI(apiKey, baseUrl, model, messages, temperature, maxTokens, true);
     } catch (err) {
       const msg = String((err && err.message) || '');
-      if (/response_format|json_object|json mode/i.test(msg)) {
+      // JSON 模式不受支持或反复返回空内容时，退回普通模式（解析层仍能容错）
+      if (/response_format|json_object|json mode|空内容/i.test(msg)) {
         jsonModeUnsupported = true;
-        console.warn('当前接口不支持 JSON 结构化输出，已退回普通模式');
+        console.warn('当前接口 JSON 模式不可靠，已退回普通模式');
       } else {
         throw err;
       }
@@ -720,9 +1006,39 @@ function parseBatchReply(raw, count) {
   return lines.slice(0, count);
 }
 
+const AUTO_KEEP_SECTIONS = new Set(['名字', '外貌', '性格', '关系', '说话习惯', '口头禅', '禁止事项']);
+function compactPersona(text) {
+  if (!text || text.length < 400) return text;
+  const parts = String(text).split(/(【[^】]+】)/).filter(Boolean);
+  const out = [];
+  let currentTag = '';
+  for (const p of parts) {
+    if (/^【[^】]+】$/.test(p)) { currentTag = p; continue; }
+    const tagName = currentTag.replace(/[【】]/g, '');
+    if (AUTO_KEEP_SECTIONS.has(tagName)) {
+      out.push(currentTag + p);
+    } else if (tagName === '台词范例') {
+      const quotes = String(p).match(/「[^」]*」/g) || [];
+      if (quotes.length) out.push(currentTag + quotes.slice(0, 2).join(''));
+    } else if (tagName === '互动示范') {
+      const rounds = String(p).match(/[^：\n]{1,8}：[^「\n]+/g) || [];
+      if (rounds.length) out.push(currentTag + rounds.slice(0, 2).join(''));
+    } else if (tagName === '情绪反应') {
+      const body = String(p);
+      const idx = body.indexOf('担心');
+      out.push(currentTag + body.slice(0, idx > 0 ? idx : 70));
+    }
+  }
+  const compact = out.join('').trim();
+  const hasCore = /【(性格|关系|说话习惯|口头禅|禁止事项)/.test(compact);
+  return (compact.length >= 180 && hasCore) ? compact : text;
+}
+
 async function generateAutoBatch() {
   const count = Math.min(24, Math.max(2, Number(config.autoBatchSize) || 24));
   const startSpeaker = lastSpeaker() === 'marisa' ? 'reimu' : 'marisa';
+  maybeDailyEvent();
+  advanceSceneState();
   const canon = canonTextFor({
     character: startSpeaker,
     topic: state.currentTopic || '',
@@ -730,14 +1046,23 @@ async function generateAutoBatch() {
   });
   const messages = [
     { role: 'system', content: '你是幻想乡同人对话的编剧。下面会提供两位主角的人设、一设资料和当前话题，请以她们的身份编写接下来连续的多句对话台词。' },
-    { role: 'system', content: `【博丽灵梦·人设】\n${config.autoPersonaReimu}` },
-    { role: 'system', content: `【雾雨魔理沙·人设】\n${config.autoPersonaMarisa}` },
+    { role: 'system', content: `【博丽灵梦·人设】\n${compactPersona(config.autoPersonaReimu)}` },
+    { role: 'system', content: `【雾雨魔理沙·人设】\n${compactPersona(config.autoPersonaMarisa)}` },
     { role: 'system', content: ALIVE_DIALOGUE_RULES }
   ];
   if (canon) messages.push({ role: 'system', content: `【一设参考】\n${canon}` });
   if (state.autoSummary) messages.push({ role: 'system', content: `之前对话总结：${state.autoSummary}` });
   messages.push({ role: 'system', content: `当前话题：${state.currentTopic || '随便聊聊'}` });
   messages.push({ role: 'system', content: `现在是幻想乡的${timePeriodLabel()}（按真实世界时间）。你可以自然地呼应天色、作息与心情，但不要报出具体钟点和现实日期。` });
+  messages.push({ role: 'system', content: weatherInjectionText() });
+  const eventText = pendingEventText();
+  if (eventText) messages.push({ role: 'system', content: eventText });
+  const sceneText = sceneStateText();
+  if (sceneText) messages.push({ role: 'system', content: sceneText });
+  const memText = heartMemoryText();
+  if (memText) messages.push({ role: 'system', content: memText });
+  const giftText = giftInjectionText();
+  if (giftText) messages.push({ role: 'system', content: giftText });
   if (state.topicTransition) {
     messages.push({ role: 'system', content: `刚才的话题已经聊得差不多了。请让两人顺着最近一句话里的某个细节（提到的物件、天气、吃食、心情等），像日常聊天一样自然地把话头带到「${state.currentTopic}」上；可以由某样东西联想过去，也可以由其中一人顺口提起，过渡句要和前文接得上，不要出现“换话题”“话题切换”这类场外说明。` });
     state.topicTransition = false;
@@ -747,12 +1072,14 @@ async function generateAutoBatch() {
   }
   messages.push({
     role: 'user',
-    content: `请以 JSON 对象格式输出，格式必须严格为 {"lines":["台词一","台词二","台词三","台词四"]}，其中 lines 必须恰好包含 ${count} 个字符串，一条都不能少（宁可每句短一点，也要把 ${count} 条写满；每句 1~3 句中文，口语自然，符合角色性格），第一句由${speakerName(startSpeaker)}说，之后两人严格交替。每句都要有新内容，接住对方上一句的具体细节，不要重复上文中已经说过的话；要有甜甜的小剧情和心动细节，让情绪有来有回，不要公式化一问一答。只输出这个 JSON 对象，不要角色名前缀、不要任何解释。`
+    content: `请以 JSON 对象格式输出，格式必须严格为 {"lines":["台词一","台词二","台词三","台词四"]}，其中 lines 必须恰好包含 ${count} 个字符串，一条都不能少（先在心中列好 1 到 ${count} 的台词清单，再逐条完整输出；宁可每句短一点，也要把 ${count} 条写满；每句 1~3 句中文，口语自然，符合角色性格），第一句由${speakerName(startSpeaker)}说，之后两人严格交替。每句都要有新内容，接住对方上一句的具体细节，不要重复上文中已经说过的话；要有甜甜的小剧情和心动细节，让情绪有来有回，不要公式化一问一答。只输出这个 JSON 对象，不要角色名前缀、不要任何解释。`
   });
   const raw = await callBatchAI(config.deepseekApiKey, config.baseUrl, config.model, messages, 0.85, Math.min(8000, Math.max(2000, count * 250)));
   let lines = parseBatchReply(raw, count);
   if (!lines.length) throw new Error('批量生成返回空');
   lines = dedupeLines(lines, state.aiHistory.slice(-10).map((m) => m.text));
+  updateSceneNote(lines);
+  catchHeartMoments(lines);
   let sp = startSpeaker;
   return lines.map((text) => {
     const item = { speaker: sp, text };
@@ -854,11 +1181,14 @@ async function autoChatTick() {
 
   await maybeSummarizeAuto();
 
-  if (Date.now() - state.topicStartTs >= config.topicRoundSec * 1000) {
-    await rotateTopic();
+  // 队列里还有没播完的台词时先不轮换，避免白费已生成的 token
+  if (!state.autoQueue.length) {
+    if (Date.now() - state.topicStartTs >= config.topicRoundSec * 1000) {
+      await rotateTopic();
+    }
+    const winner = state.candidates.find((c) => c.votes.size >= config.switchVotes);
+    if (winner) await rotateTopic();
   }
-  const winner = state.candidates.find((c) => c.votes.size >= config.switchVotes);
-  if (winner) await rotateTopic();
 
   if (state.consecutiveErrors >= 4) {
     pushLog('system', '（内置 AI 暂时打盹了，休息一会儿再继续…）');
@@ -874,6 +1204,7 @@ async function autoChatTick() {
     pushLog(speaker, text);
     state.aiHistory.push({ speaker, text });
     if (state.aiHistory.length > 30) state.aiHistory.shift();
+    maybeAmbient();
     return;
   }
 
@@ -894,6 +1225,7 @@ async function autoChatTick() {
   pushLog(speaker, text);
   state.aiHistory.push({ speaker, text });
   if (state.aiHistory.length > 30) state.aiHistory.shift();
+  maybeAmbient();
 }
 
 function sleep(ms) {
@@ -1098,7 +1430,7 @@ async function handleChatBatch(req, res, body) {
   });
   if (resolved.error) return sendJSON(req, res, 400, { error: resolved.error });
   const count = Math.min(24, Math.max(2, Number(turns) || 4));
-  // 批量输出要求句数精确，温度上限 0.85（太高容易漏句），创造性由单轮对谈承担
+  // 批量输出要求句数精确，温度上限 0.75（太高容易漏句），创造性由单轮对谈承担
   const pReimu = (personas && personas.reimu) || config.personaReimu;
   const pMarisa = (personas && personas.marisa) || config.personaMarisa;
   const canonText = canonTextFor({
@@ -1116,18 +1448,28 @@ async function handleChatBatch(req, res, body) {
     ];
     if (canonText) messages.push({ role: 'system', content: `【一设参考】\n${canonText}` });
     if (summary) messages.push({ role: 'system', content: `之前对话总结：${summary}` });
+    if (!(history || []).length) {
+      // 清空后的新一轮对话：不沿用上一轮的场景备注（自动闲聊的记忆不受影响）
+      if (state.scene) state.scene.note = '';
+    }
+    advanceSceneState();
+    const sceneText = sceneStateText();
+    if (sceneText) messages.push({ role: 'system', content: sceneText });
+    messages.push({ role: 'system', content: `现在是幻想乡的${timePeriodLabel()}（按真实世界时间）。你可以自然地呼应天色、作息与心情，但不要报出具体钟点和现实日期。` });
+    messages.push({ role: 'system', content: weatherInjectionText() });
     messages.push({ role: 'system', content: `当前话题：${topic || '随便聊聊'}` });
     for (const m of (history || []).slice(-10)) {
       messages.push({ role: 'user', content: `${speakerName(m.speaker)}：${m.text}` });
     }
     messages.push({
       role: 'user',
-      content: `请以 JSON 对象格式输出，格式必须严格为 {"lines":["台词一","台词二","台词三","台词四"]}，其中 lines 必须恰好包含 ${count} 个字符串，一条都不能少（宁可每句短一点，也要把 ${count} 条写满；每句 1~3 句中文，口语自然，符合角色性格），第一句由${speakerName(character)}说，之后两人严格交替。每句都要有新内容，接住对方上一句的具体细节，不要重复上文中已经说过的话；要有甜甜的小剧情和心动细节，让情绪有来有回，不要公式化一问一答。只输出这个 JSON 对象，不要角色名前缀、不要任何解释。`
+      content: `请以 JSON 对象格式输出，格式必须严格为 {"lines":["台词一","台词二","台词三","台词四"]}，其中 lines 必须恰好包含 ${count} 个字符串，一条都不能少（先在心中列好 1 到 ${count} 的台词清单，再逐条完整输出；宁可每句短一点，也要把 ${count} 条写满；每句 1~3 句中文，口语自然，符合角色性格），第一句由${speakerName(character)}说，之后两人严格交替。每句都要有新内容，接住对方上一句的具体细节，不要重复上文中已经说过的话；要有甜甜的小剧情和心动细节，让情绪有来有回，不要公式化一问一答。只输出这个 JSON 对象，不要角色名前缀、不要任何解释。`
     });
-    const raw = await callBatchAI(resolved.key, resolved.baseUrl, model || config.model, messages, Math.min(Number(temperature) || 0.95, 0.85), Math.min(6000, Math.max(1600, count * 200)));
+    const raw = await callBatchAI(resolved.key, resolved.baseUrl, model || config.model, messages, Math.min(Number(temperature) || 0.95, 0.75), Math.min(6000, Math.max(1600, count * 200)));
     let lines = parseBatchReply(raw, count);
     if (!lines.length) throw new Error('批量生成返回空');
     lines = dedupeLines(lines, (history || []).slice(-10).map((m) => m.text));
+    updateSceneNote(lines);
     let sp = character;
     const replies = lines.map((text) => {
       const item = { speaker: sp, text };
@@ -1229,10 +1571,14 @@ function handleState(req, res, voterId) {
     switchVotes: config.switchVotes,
     summarizeAfter: Number(config.summarizeAfter) || 0,
     summaryKeepRecent: Number(config.summaryKeepRecent) || 6,
+    ambientEvery: Number(config.ambientEvery) || 8,
     canonEnabled: config.canonEnabled !== false,
     canonSmart: config.canonSmart !== false,
     candidates: candidatesView(voterId),
     log: state.chatLog.slice(-60),
+    sceneText: displaySceneText(),
+    heartMoments: (state.heartMoments || []).slice(-2),
+    weather: refreshWeather().kind,
     serverTime: Date.now()
   });
 }
@@ -1431,6 +1777,10 @@ const server = http.createServer(async (req, res) => {
       return await handleChat(req, res, body);
     }
 
+    if (req.method === 'POST' && pathname === '/api/clear') {
+      const result = resetConversationMemory();
+      return sendJSON(req, res, 200, { ok: true, clearedAt: Date.now() });
+    }
     if (req.method === 'POST' && pathname === '/api/summarize') {
       const body = await readBody(req);
       return await handleSummarize(req, res, body);
@@ -1445,6 +1795,13 @@ const server = http.createServer(async (req, res) => {
       const body = await readBody(req);
       const result = await handleTopic(body);
       return sendJSON(req, res, result.status, { error: result.error, candidates: result.candidates });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/gift') {
+      const body = await readBody(req);
+      const result = handleGift(body);
+      if (result.ok) return sendJSON(req, res, 200, { ok: true, cooldownMs: result.cooldownMs });
+      return sendJSON(req, res, result.status, { error: result.error });
     }
 
     if (req.method === 'POST' && pathname === '/api/vote') {
