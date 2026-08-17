@@ -297,6 +297,11 @@
 
   function appendMessage(speaker, text, container) {
     const log = container || els.chatLog;
+    let display = String(text == null ? '' : text).trim();
+    const selfName = speaker === 'marisa' ? '魔理沙' : '灵梦';
+    const m = display.match(new RegExp('^' + selfName + '\\s*[:：,，。.、!！?？…~～ ]+'));
+    if (m) display = display.slice(m[0].length).trim();
+    if (!display || display === selfName) return null;
     const row = document.createElement('div');
     row.className = `msg ${speaker}`;
 
@@ -319,7 +324,7 @@
     who.className = 'who';
     who.textContent = speaker === 'user' ? '旁白' : CHARACTERS[speaker].full;
     const textEl = document.createElement('div');
-    textEl.textContent = text;
+    textEl.textContent = display;
     bubble.appendChild(who);
     bubble.appendChild(textEl);
 
@@ -609,9 +614,9 @@
         appendSystem(entry.text, els.autoChatLog);
       } else {
         const tw = appendTyping(entry.type, els.autoChatLog);
-        await sleepMs(650 + Math.random() * 550);
+        await sleepMs(320 + Math.random() * 260);
         removeTyping(tw);
-        await sleepMs(120 + Math.random() * 180);
+        await sleepMs(70 + Math.random() * 110);
         appendMessageSplit(entry.type, entry.text, els.autoChatLog);
       }
       lastAutoMsgId = entry.id;
@@ -1033,7 +1038,7 @@
     history.push({ speaker, text });
 
     const typingRow = appendTyping(speaker);
-    const typingMs = Math.min(2600, 450 + Array.from(text).length * 16) + Math.random() * 400;
+    const typingMs = Math.min(1500, 280 + Array.from(text).length * 9) + Math.random() * 220;
     await sleepMs(typingMs);
     removeTyping(typingRow);
     if (stopRequested) return false;
@@ -1047,7 +1052,7 @@
       appendMessage(speaker, parts[i]);
       if (i < parts.length - 1) {
         const endsStrong = /[！？。!?…—]$/.test(parts[i]);
-        await sleepMs(endsStrong ? 800 + Math.random() * 600 : 620 + Math.random() * 520);
+        await sleepMs(endsStrong ? 380 + Math.random() * 260 : 300 + Math.random() * 240);
         if (stopRequested) return false;
       }
     }

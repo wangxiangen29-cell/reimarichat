@@ -58,7 +58,20 @@ const ALIVE_DIALOGUE_RULES = `写作要求（活人感）：
 5. 每句都要有新信息或新情绪，不要复述上文（换个标点、加几个字的伪新句也算重复），不要用空话硬凑长度。
 6. 别每句都用问号结尾，聊天不是采访；偶尔可以安静几拍再开口，用省略号或停顿词表现，别像打乒乓球一样每句都接得严丝合缝。
 7. 绝不 OOC：保持各自性格与口癖（灵梦嘴硬心软、魔理沙元气直率），不互叫「红白」「黑白」，不用现代网络梗，不跳出角色评价对方，不要突然开始科普一设或念设定；甜要含蓄，不突然深情告白，不写露骨内容。
-8. 甜要落在细节里：比如“给你留的”“顺手买的”“早就知道你会来”，一份心意藏在日常小事里，不需要说出来。`;
+8. 甜要落在细节里：比如“给你留的”“顺手买的”“早就知道你会来”，一份心意藏在日常小事里，不需要说出来。
+9. 句子的“人味”来自节奏：多用吧、呢、啊、嘛、啦、哟、呀收尾，短句为主，偶尔才有一句长的；用“……”“——”表现停顿、被打断、话说一半；用“反正、毕竟、其实、明明、倒、就是说、不过、所以”这类口语连接，别用“然而、因此、此外、总之”这类书面词。
+10. 别把话说满、别太顺溜：允许口头禅、重复、自问自答、答非所问、说着说着跑题；情绪从动作和细节里漏出来（嘴上嫌弃、手里却把茶推过去），身体动作融进语气和用词里，不要用括号旁白解释。`;
+
+// 从 THBWiki 官方小说《东方香霖堂》（旧连载27话+外来韦编新连载11话）语料中提炼的对话质感参考
+const KOURINDOU_STYLE_REF = `写作参考（香霖堂语料提炼的“人味”）：
+1. 台词要“听得见语气”：落尾词（吧/呢/啊/嘛/啦/哟/呀）用得多，句子短，三五字到十几字一句；别把话说成完整工整的书面句。
+2. 停顿和打断很自然：用“……”“——”表示话说一半、被岔开、犹豫、欲言又止；一句话可以说半截就换个方向。
+3. 口语连接词：多写“反正、毕竟、其实、明明、倒、就是说、不过、所以、然后”；不用“然而、因此、此外、综上所述”。
+4. 接话接得住也接得歪：先戳对方话里的具体点（东西、动作、语气），再顺势岔开或推进；可以答非所问、自说自话两句再绕回来，但别各说各话。
+5. 别把话说满：用“差不多、说不定、大概、总觉得、应该、可能”留余地；允许口头禅和重复，像人说话一样带着一点废话。
+6. 情绪从细节漏出来，不靠直说：嘴上说“才没有”，手里的茶却推近半寸；被戳穿就转移话题、假装看别处；心意藏在“顺手买的”“给你留的”这类小事里。
+7. 开场从小事/天气/身边物件切入（昨天剩的茶、帽子上的灰、今天的风），别用“今天天气真好”式干巴巴的寒暄，也别一上来抛大道理。
+8. 可以小小自恋、自嘲、夸张：魔理沙会“我跟你讲”“大失败了呢”“反正该叫我客人啦”，灵梦会抱怨着抱怨着就心软；不要一本正经客套。`;
 // ---------- 一设数据库（默认内容整理自 THBWiki，仅概括提取，供 AI 参考） ----------
 const DEFAULT_CANON_REIMU = `种族：人类。职业：巫女。博丽神社现任巫女，也是历代巫女中最缺乏危机感的一位。
 东方Project的第一主角，官方整数作标题画面几乎都是她；几乎所有官方作品里都是主角或常驻角色。
@@ -752,12 +765,13 @@ function buildMessages({ character, topic, history = [], persona, summary, canon
       `对话规则：顺着对方的上一句话自然地接下去，接住对方提到的具体细节，有来有回，可以吐槽、跑题或斗嘴，但必须保持角色性格；每次只说1~3句话；不要重复上文中已经说过的话，也不要复述对方的原句；口语自然，别像念稿；可以自然地写出甜甜的小剧情和心动细节（吃醋、照顾、靠近、小暧昧、口是心非），让对话更有糖分；不要提剧本、不要解释、不要跳出角色。\n` +
       `注意：对话中出现的「旁白」是场景描述或剧情事件，请自然地回应它，不要评价旁白本身。`
   });
+  messages.push({ role: 'system', content: KOURINDOU_STYLE_REF });
   for (const item of (history || []).slice(-10)) {
     messages.push({ role: 'user', content: `${speakerName(item.speaker)}：「${String(item.text).trim()}」` });
   }
   messages.push({
     role: 'user',
-    content: `现在轮到你（${selfName}）说话了，请以角色身份直接说出下一句台词，开头不要重复你的名字，不要加引号。`
+    content: `现在轮到你（${selfName}）说话了，请以角色身份直接说出下一句台词，开头不要重复、也不要写出自己的名字（不要以「灵梦」或「魔理沙」自称），不要加引号。`
   });
   return messages;
 }
@@ -778,6 +792,15 @@ function cleanDialogueLine(text) {
   return s.trim();
 }
 
+// 按发言人剥离“自己名字”前缀（防止“灵梦：”或整句“灵梦”混进台词；对方名字开头是正常称呼，不处理）
+function stripSelfNamePrefix(text, speaker) {
+  const self = speaker === 'marisa' ? '魔理沙' : '灵梦';
+  let s = String(text || '').trim();
+  const re = new RegExp('^' + self + '\\s*[:：,，。.、!！?？…~～ ]+');
+  const m = s.match(re);
+  if (m) s = s.slice(m[0].length).trim();
+  return s;
+}
 function normalizeForCompare(text) {
   // 去掉空白与常见标点后再比较，避免“换了个标点就躲过去”的重复
   return String(text || '')
@@ -1048,7 +1071,8 @@ async function generateAutoBatch() {
     { role: 'system', content: '你是幻想乡同人对话的编剧。下面会提供两位主角的人设、一设资料和当前话题，请以她们的身份编写接下来连续的多句对话台词。' },
     { role: 'system', content: `【博丽灵梦·人设】\n${compactPersona(config.autoPersonaReimu)}` },
     { role: 'system', content: `【雾雨魔理沙·人设】\n${compactPersona(config.autoPersonaMarisa)}` },
-    { role: 'system', content: ALIVE_DIALOGUE_RULES }
+    { role: 'system', content: ALIVE_DIALOGUE_RULES },
+    { role: 'system', content: KOURINDOU_STYLE_REF }
   ];
   if (canon) messages.push({ role: 'system', content: `【一设参考】\n${canon}` });
   if (state.autoSummary) messages.push({ role: 'system', content: `之前对话总结：${state.autoSummary}` });
@@ -1072,7 +1096,7 @@ async function generateAutoBatch() {
   }
   messages.push({
     role: 'user',
-    content: `请以 JSON 对象格式输出，格式必须严格为 {"lines":["台词一","台词二","台词三","台词四"]}，其中 lines 必须恰好包含 ${count} 个字符串，一条都不能少（先在心中列好 1 到 ${count} 的台词清单，再逐条完整输出；宁可每句短一点，也要把 ${count} 条写满；每句 1~3 句中文，口语自然，符合角色性格），第一句由${speakerName(startSpeaker)}说，之后两人严格交替。每句都要有新内容，接住对方上一句的具体细节，不要重复上文中已经说过的话；要有甜甜的小剧情和心动细节，让情绪有来有回，不要公式化一问一答。只输出这个 JSON 对象，不要角色名前缀、不要任何解释。`
+    content: `请以 JSON 对象格式输出，格式必须严格为 {"lines":["台词一","台词二","台词三","台词四"]}，其中 lines 必须恰好包含 ${count} 个字符串，一条都不能少（先在心中列好 1 到 ${count} 的台词清单，再逐条完整输出；宁可每句短一点，也要把 ${count} 条写满；每句 1~3 句中文，口语自然，符合角色性格），第一句由${speakerName(startSpeaker)}说，之后两人严格交替。每句都要有新内容，接住对方上一句的具体细节，不要重复上文中已经说过的话；要有甜甜的小剧情和心动细节，让情绪有来有回，不要公式化一问一答。只输出这个 JSON 对象，不要角色名前缀、不要任何解释；每句台词都直接以说话内容开头，严禁在台词开头写出说话人自己的名字（比如灵梦说的话绝不能以「灵梦」二字开头，魔理沙也不能以「魔理沙」开头）。`
   });
   const raw = await callBatchAI(config.deepseekApiKey, config.baseUrl, config.model, messages, 0.85, Math.min(8000, Math.max(2000, count * 250)));
   let lines = parseBatchReply(raw, count);
@@ -1082,7 +1106,7 @@ async function generateAutoBatch() {
   catchHeartMoments(lines);
   let sp = startSpeaker;
   return lines.map((text) => {
-    const item = { speaker: sp, text };
+    const item = { speaker: sp, text: stripSelfNamePrefix(text, sp) || text };
     sp = sp === 'marisa' ? 'reimu' : 'marisa';
     return item;
   });
@@ -1393,6 +1417,7 @@ async function handleChat(req, res, body) {
         console.error('自查失败，保留原台词：', err.message);
       }
     }
+    reply = stripSelfNamePrefix(reply, character) || reply;
     sendJSON(req, res, 200, { reply });
   } catch (err) {
     sendJSON(req, res, 502, { error: `调用 AI 失败：${err.message}` });
@@ -1444,7 +1469,8 @@ async function handleChatBatch(req, res, body) {
       { role: 'system', content: '你是幻想乡同人对话的编剧。下面会提供两位主角的人设、一设资料和当前话题，请以她们的身份编写接下来连续的多句对话台词。' },
       { role: 'system', content: `【博丽灵梦·人设】\n${pReimu}` },
       { role: 'system', content: `【雾雨魔理沙·人设】\n${pMarisa}` },
-      { role: 'system', content: ALIVE_DIALOGUE_RULES }
+        { role: 'system', content: ALIVE_DIALOGUE_RULES },
+      { role: 'system', content: KOURINDOU_STYLE_REF }
     ];
     if (canonText) messages.push({ role: 'system', content: `【一设参考】\n${canonText}` });
     if (summary) messages.push({ role: 'system', content: `之前对话总结：${summary}` });
@@ -1463,7 +1489,7 @@ async function handleChatBatch(req, res, body) {
     }
     messages.push({
       role: 'user',
-      content: `请以 JSON 对象格式输出，格式必须严格为 {"lines":["台词一","台词二","台词三","台词四"]}，其中 lines 必须恰好包含 ${count} 个字符串，一条都不能少（先在心中列好 1 到 ${count} 的台词清单，再逐条完整输出；宁可每句短一点，也要把 ${count} 条写满；每句 1~3 句中文，口语自然，符合角色性格），第一句由${speakerName(character)}说，之后两人严格交替。每句都要有新内容，接住对方上一句的具体细节，不要重复上文中已经说过的话；要有甜甜的小剧情和心动细节，让情绪有来有回，不要公式化一问一答。只输出这个 JSON 对象，不要角色名前缀、不要任何解释。`
+      content: `请以 JSON 对象格式输出，格式必须严格为 {"lines":["台词一","台词二","台词三","台词四"]}，其中 lines 必须恰好包含 ${count} 个字符串，一条都不能少（先在心中列好 1 到 ${count} 的台词清单，再逐条完整输出；宁可每句短一点，也要把 ${count} 条写满；每句 1~3 句中文，口语自然，符合角色性格），第一句由${speakerName(character)}说，之后两人严格交替。每句都要有新内容，接住对方上一句的具体细节，不要重复上文中已经说过的话；要有甜甜的小剧情和心动细节，让情绪有来有回，不要公式化一问一答。只输出这个 JSON 对象，不要角色名前缀、不要任何解释；每句台词都直接以说话内容开头，严禁在台词开头写出说话人自己的名字（比如灵梦说的话绝不能以「灵梦」二字开头，魔理沙也不能以「魔理沙」开头）。`
     });
     const raw = await callBatchAI(resolved.key, resolved.baseUrl, model || config.model, messages, Math.min(Number(temperature) || 0.95, 0.75), Math.min(6000, Math.max(1600, count * 200)));
     let lines = parseBatchReply(raw, count);
@@ -1472,7 +1498,7 @@ async function handleChatBatch(req, res, body) {
     updateSceneNote(lines);
     let sp = character;
     const replies = lines.map((text) => {
-      const item = { speaker: sp, text };
+      const item = { speaker: sp, text: stripSelfNamePrefix(text, sp) || text };
       sp = sp === 'marisa' ? 'reimu' : 'marisa';
       return item;
     });
