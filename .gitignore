@@ -1,5 +1,6 @@
 config.json
 summary_history.json
+data/
 tmp/
 node_modules/
 local_dev/

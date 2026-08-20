@@ -21,6 +21,9 @@ const {
   handleManualPersonas,
   handleCanon,
   handleAutoPersonas,
+  handleGetAgents,
+  handleUpdateAgents,
+  handleCanonWrite,
   handleGetSummaries,
   handleUpdateSummary,
   handleDeleteSummary
@@ -136,8 +139,29 @@ const server = http.createServer(async (req, res) => {
       return sendJSON(req, res, 200, {
         defaults: result.defaults,
         server: result.server,
-        enabled: result.enabled
+        enabled: result.enabled,
+        smart: result.smart,
+        entries: result.entries
       });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/canon') {
+      const body = await readBody(req);
+      const result = handleCanonWrite(body);
+      if (result.ok) return sendJSON(req, res, 200, { ok: true, entries: result.entries });
+      return sendJSON(req, res, result.status, { error: result.error });
+    }
+
+    if (req.method === 'GET' && pathname === '/api/agents') {
+      const result = handleGetAgents();
+      return sendJSON(req, res, 200, { agents: result.agents, defaults: result.defaults });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/agents') {
+      const body = await readBody(req);
+      const result = handleUpdateAgents(body);
+      if (result.ok) return sendJSON(req, res, 200, { ok: true, agents: result.agents, defaults: result.defaults });
+      return sendJSON(req, res, result.status, { error: result.error });
     }
 
     if (req.method === 'POST' && pathname === '/api/personas/auto') {
