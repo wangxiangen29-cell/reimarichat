@@ -70,6 +70,7 @@ export async function fetchState() {
     updateAutoPanel(data);
     if (els.autoChatToggle) els.autoChatToggle.checked = !!data.autoChatEnabled;
     if (els.twoAgentToggle) els.twoAgentToggle.checked = data.twoAgentMode !== false;
+    if (els.summaryStrengthSelect) els.summaryStrengthSelect.value = data.summaryStrength || 'short';
     if (data.autoChatEnabled) {
       if (!state.autoActive) {
         enterAutoMode(data);

@@ -89,7 +89,8 @@ export const els = {
   autoWelcome: $('autoWelcome'),
   adminTokenInput: $('adminTokenInput'),
   autoChatToggle: $('autoChatToggle'),
-  twoAgentToggle: $('twoAgentToggle')
+  twoAgentToggle: $('twoAgentToggle'),
+  summaryStrengthSelect: $('summaryStrengthSelect')
 };
 
 export const CHARACTERS = {

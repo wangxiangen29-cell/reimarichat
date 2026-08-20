@@ -124,6 +124,36 @@ function bindSettings() {
   if (els.twoAgentToggle) {
     els.twoAgentToggle.addEventListener('change', (e) => toggleServerSwitch('twoagent', e.target.checked));
   }
+  if (els.summaryStrengthSelect) {
+    els.summaryStrengthSelect.addEventListener('change', async () => {
+      const token = state.settings.adminToken;
+      const strength = els.summaryStrengthSelect.value;
+      const labels = { short: '短（120字提要）', normal: '中（约300字）', long: '长（约600字）' };
+      if (!token) {
+        toast('请先填写管理员口令（config.json 里的 adminToken）');
+        fetchState();
+        return;
+      }
+      try {
+        const res = await fetch('/api/admin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, action: 'summarystrength', strength })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.error) {
+          toast(data.error || '设置失败');
+          fetchState();
+          return;
+        }
+        toast(`压缩强度已设为：${labels[strength] || strength}`);
+        fetchState();
+      } catch (_) {
+        toast('操作失败，请检查口令');
+        fetchState();
+      }
+    });
+  }
   els.settingsBtn.addEventListener('click', () => {
     if (!els.personaPanel.hidden) {
       closePersonaPanel();

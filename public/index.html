@@ -169,7 +169,14 @@
             <label><input type="checkbox" id="autoChatToggle"> 自动闲聊</label>
             <label><input type="checkbox" id="twoAgentToggle"> 双 agent 真实对话</label>
           </div>
-          <p class="settings-hint">这两个是服务器级开关，需管理员口令才能改；口令见 config.json 的 adminToken 或启动日志。</p>
+          <label>对话压缩强度
+            <select id="summaryStrengthSelect">
+              <option value="short">短（short · 120字提要）</option>
+              <option value="normal">中（normal · 约300字）</option>
+              <option value="long">长（long · 约600字）</option>
+            </select>
+          </label>
+          <p class="settings-hint">这些是服务器级设置，需管理员口令才能改；口令见 config.json 的 adminToken 或启动日志。压缩强度档位越高，攒的对话越多才触发压缩、总结越详细（最低档才是 120 字提要）。</p>
         </div>
         <p class="settings-hint">
           不填 Key 时自动使用内置台词演示；填了 Key 就由 AI 实时对话。
