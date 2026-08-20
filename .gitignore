@@ -7,3 +7,4 @@ local_dev/
 *.log
 reimarichat-deploy.zip
 .env
+corpus/
