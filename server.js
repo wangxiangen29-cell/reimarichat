@@ -26,7 +26,13 @@ const {
   handleCanonWrite,
   handleGetSummaries,
   handleUpdateSummary,
-  handleDeleteSummary
+  handleDeleteSummary,
+  handleGetManuals,
+  handleCreateManual,
+  handleGetManual,
+  handleAppendManual,
+  handleRenameManual,
+  handleDeleteManual
 } = require('./lib/routes');
 const { handleGift } = require('./lib/ambient');
 const { startAutoChat, stopAutoChat } = require('./lib/autochat');
@@ -197,6 +203,46 @@ const server = http.createServer(async (req, res) => {
         const result = handleDeleteSummary(summaryMatch[1]);
         if (result.ok) return sendJSON(req, res, 200, { ok: true, current: result.current, history: result.history });
         return sendJSON(req, res, result.status, { error: result.error });
+      }
+      return sendJSON(req, res, 405, { error: 'Method Not Allowed' });
+    }
+
+    if (req.method === 'GET' && pathname === '/api/manuals') {
+      const result = handleGetManuals();
+      return sendJSON(req, res, result.status, { ok: result.ok, sessions: result.sessions });
+    }
+    if (req.method === 'POST' && pathname === '/api/manuals') {
+      const body = await readBody(req);
+      const result = handleCreateManual(body);
+      return sendJSON(req, res, result.status, { ok: result.ok, session: result.session });
+    }
+    const manualMessagesMatch = pathname.match(/^\/api\/manuals\/([\w-]+)\/messages$/);
+    if (manualMessagesMatch) {
+      if (req.method === 'POST') {
+        const body = await readBody(req);
+        const result = handleAppendManual(manualMessagesMatch[1], body);
+        return sendJSON(req, res, result.status, { ok: result.ok, session: result.session });
+      }
+      return sendJSON(req, res, 405, { error: 'Method Not Allowed' });
+    }
+    const manualTitleMatch = pathname.match(/^\/api\/manuals\/([\w-]+)\/title$/);
+    if (manualTitleMatch) {
+      if (req.method === 'POST') {
+        const body = await readBody(req);
+        const result = handleRenameManual(manualTitleMatch[1], body);
+        return sendJSON(req, res, result.status, { ok: result.ok, session: result.session });
+      }
+      return sendJSON(req, res, 405, { error: 'Method Not Allowed' });
+    }
+    const manualMatch = pathname.match(/^\/api\/manuals\/([\w-]+)$/);
+    if (manualMatch) {
+      if (req.method === 'GET') {
+        const result = handleGetManual(manualMatch[1]);
+        return sendJSON(req, res, result.status, { ok: result.ok, session: result.session });
+      }
+      if (req.method === 'DELETE') {
+        const result = handleDeleteManual(manualMatch[1]);
+        return sendJSON(req, res, result.status, { ok: result.ok });
       }
       return sendJSON(req, res, 405, { error: 'Method Not Allowed' });
     }

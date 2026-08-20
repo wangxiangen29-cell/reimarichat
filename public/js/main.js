@@ -24,7 +24,7 @@ import {
   proposeTopic,
   sendGift
 } from './auto.js';
-import { startConversation, queueInterjection } from './chat.js';
+import { startConversation, queueInterjection, openManualHistory } from './chat.js';
 
 // ---------- 后台开关（服务器级，需管理员口令） ----------
 async function toggleServerSwitch(action, enabled) {
@@ -177,6 +177,10 @@ function bindSettings() {
   els.personaResetBtn.addEventListener('click', resetPersonas);
   els.aboutBtn.addEventListener('click', openAbout);
   els.aboutCloseBtn.addEventListener('click', closeAbout);
+  els.manualHistoryBtn.addEventListener('click', openManualHistory);
+  els.manualHistoryCloseBtn.addEventListener('click', () => { els.manualHistoryModal.hidden = true; });
+  els.manualHistoryModal.addEventListener('click', (e) => { if (e.target === els.manualHistoryModal) els.manualHistoryModal.hidden = true; });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !els.manualHistoryModal.hidden) els.manualHistoryModal.hidden = true; });
   els.aboutModal.addEventListener('click', (e) => {
     if (e.target === els.aboutModal) closeAbout();
   });

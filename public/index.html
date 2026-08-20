@@ -82,6 +82,7 @@
         <button class="btn small" id="personaBtn" title="人设管理">人设</button>
         <button class="btn small" id="canonBtn" title="一设数据库">一设</button>
         <button class="btn small" id="settingsBtn">⚙ 设置</button>
+        <button class="btn small" id="manualHistoryBtn" title="历史对话">🗒 历史</button>
       </div>
       <div class="interject-row" id="interjectRow" hidden>
         <input id="interjectInput" type="text" maxlength="80" placeholder="加一句旁白，例如：忽然下起了雨…"
@@ -314,6 +315,19 @@
       <p>灵感来自《东方Project》 · 页面仅供同人娱乐，非官方作品</p>
       <p>立绘：dairi / はるか（伪黄昏绘） · 仅供学习交流，版权归原作者所有</p>
     </footer>
+  </div>
+
+  <div class="modal-overlay" id="manualHistoryModal" hidden>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2>历史对话</h2>
+        <button class="btn ghost small" id="manualHistoryCloseBtn" type="button">关闭</button>
+      </div>
+      <div class="modal-body">
+        <p class="vote-hint">以下是保存过的历史手动对谈，点击「打开」可查看并继续。</p>
+        <div class="manual-history-list" id="manualHistoryList"></div>
+      </div>
+    </div>
   </div>
 
   <div class="toast" id="toast" hidden></div>

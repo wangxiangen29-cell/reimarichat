@@ -39,6 +39,7 @@ export function clearChat() {
   state.history = [];
   state.manualTopic = '';
   state.manualSummary = '';
+  state.manualSessionId = null;
   state.pendingTurns = 0;
   state.interjectQueue = [];
   els.chatLog.innerHTML = '';

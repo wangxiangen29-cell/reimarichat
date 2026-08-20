@@ -14,11 +14,116 @@ export function nextCharacterSpeaker() {
   return 'marisa';
 }
 
+// 将新增台词写入当前手动会话（服务端持久化）
+async function persistManual(entries) {
+  const id = state.manualSessionId;
+  if (!id || !entries || !entries.length) return;
+  try {
+    await fetch('/api/manuals/' + id + '/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: entries })
+    });
+  } catch (_) {}
+}
+
+export function openManualHistory() {
+  els.manualHistoryModal.hidden = false;
+  renderManualHistory();
+}
+
+export async function renderManualHistory() {
+  const list = els.manualHistoryList;
+  list.innerHTML = '<p class="vote-hint">加载中…</p>';
+  try {
+    const res = await fetch('/api/manuals', { cache: 'no-store' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || '加载失败');
+    const sessions = Array.isArray(data.sessions) ? data.sessions : [];
+    state.manualSessions = sessions;
+    if (!sessions.length) {
+      list.innerHTML = '<p class="vote-hint">还没有历史对话。开始一场手动对谈后会自动保存。</p>';
+      return;
+    }
+    list.innerHTML = '';
+    for (const s of sessions) {
+      const row = document.createElement('div');
+      row.className = 'manual-history-item';
+      const when = new Date(s.updatedAt);
+      const p = (n) => String(n).padStart(2, '0');
+      const time = when.getFullYear() + '-' + p(when.getMonth() + 1) + '-' + p(when.getDate()) + ' ' + p(when.getHours()) + ':' + p(when.getMinutes());
+      const info = document.createElement('div');
+      info.className = 'manual-history-info';
+      const title = document.createElement('div');
+      title.className = 'manual-history-title';
+      title.textContent = s.title || '未命名对话';
+      const meta = document.createElement('div');
+      meta.className = 'manual-history-meta';
+      meta.textContent = (s.topic ? '话题：' + s.topic + ' · ' : '') + s.msgCount + ' 条 · ' + time;
+      info.appendChild(title);
+      info.appendChild(meta);
+      const actions = document.createElement('div');
+      actions.className = 'manual-history-actions';
+      const openBtn = document.createElement('button');
+      openBtn.className = 'btn small';
+      openBtn.textContent = '打开';
+      openBtn.addEventListener('click', () => loadManualSession(s.id));
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn small ghost';
+      delBtn.textContent = '删除';
+      delBtn.addEventListener('click', async () => {
+        if (!confirm('确定删除这段对话历史？')) return;
+        try { await fetch('/api/manuals/' + s.id, { method: 'DELETE' }); } catch (_) {}
+        renderManualHistory();
+      });
+      actions.appendChild(openBtn);
+      actions.appendChild(delBtn);
+      row.appendChild(info);
+      row.appendChild(actions);
+      list.appendChild(row);
+    }
+  } catch (err) {
+    list.innerHTML = '<p class="vote-hint">加载历史失败。</p>';
+  }
+}
+
+export async function loadManualSession(id) {
+  try {
+    const res = await fetch('/api/manuals/' + id, { cache: 'no-store' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || '加载失败');
+    const session = data.session;
+    if (!session) throw new Error('对话不存在');
+    state.stopRequested = true;
+    state.running = false;
+    state.busy = false;
+    state.manualTopic = session.topic || '';
+    state.manualSummary = '';
+    state.manualSessionId = session.id;
+    state.history = (session.messages || [])
+      .filter((m) => m && m.speaker && typeof m.text === 'string')
+      .map((m) => ({ speaker: m.speaker, text: m.text }));
+    els.topicInput.value = state.manualTopic || '';
+    els.chatLog.innerHTML = '';
+    if (state.manualTopic) appendNarration('（开场话题）' + state.manualTopic);
+    for (const m of state.history) {
+      if (m.speaker === 'user') appendNarration(m.text);
+      else if (m.speaker === 'system') appendSystem(m.text);
+      else appendMessage(m.speaker, m.text);
+    }
+    els.manualHistoryModal.hidden = true;
+    syncControls();
+    toast('已载入历史对话，可直接继续。');
+  } catch (err) {
+    toast(err.message || '载入失败');
+  }
+}
 async function renderReply(speaker, text) {
   if (!text || state.stopRequested) return false;
   const sentences = splitSentences(text);
   const parts = sentences.length ? sentences : [String(text).trim()].filter(Boolean);
   state.history.push({ speaker, text });
+  persistManual([{ speaker, text }]);
 
   const typingRow = appendTyping(speaker);
   const typingMs = Math.min(1500, 280 + Array.from(text).length * 9) + Math.random() * 220;
@@ -192,6 +297,15 @@ export async function startConversation() {
     state.history = [];
     demoEngine.reset();
     els.chatLog.innerHTML = '';
+    try {
+      const res = await fetch('/api/manuals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic: state.manualTopic })
+      });
+      const d = await res.json().catch(() => ({}));
+      if (res.ok && d.session) state.manualSessionId = d.session.id;
+    } catch (_) {}
     if (state.manualTopic) {
       appendNarration(`（开场话题）${state.manualTopic}`);
     }
@@ -258,6 +372,7 @@ export function queueInterjection() {
   } else {
     appendNarration(text);
     state.history.push({ speaker: 'user', text });
+    persistManual([{ speaker: 'user', text }]);
     speak(nextCharacterSpeaker()).then(() => drainInterjections()).then(() => syncControls());
   }
 }
@@ -267,6 +382,7 @@ async function drainInterjections() {
     const text = state.interjectQueue.shift();
     appendNarration(text);
     state.history.push({ speaker: 'user', text });
+    persistManual([{ speaker: 'user', text }]);
     await speak(nextCharacterSpeaker());
   }
 }
