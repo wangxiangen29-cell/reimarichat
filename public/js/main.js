@@ -1,4 +1,4 @@
-import { $, els, state, saveSettings } from './core.js';
+import { $, els, state, saveSettings, THINKING_MODES, THINKING_MODE_LABELS, SUMMARY_STRENGTHS, SUMMARY_STRENGTH_LABELS } from './core.js';
 import { openAbout, closeAbout, toast } from './render.js';
 import {
   renderSettings,
@@ -74,8 +74,10 @@ function bindSettings() {
     els.tempValue.textContent = state.settings.temperature.toFixed(2);
     saveSettings();
   });
-  els.thinkingModeSelect.addEventListener('change', () => {
-    state.settings.thinkingMode = els.thinkingModeSelect.value;
+  els.thinkingModeSlider.addEventListener('input', () => {
+    const i = Number(els.thinkingModeSlider.value) || 0;
+    state.settings.thinkingMode = THINKING_MODES[i] || 'none';
+    els.thinkingModeValue.textContent = THINKING_MODE_LABELS[i] || THINKING_MODE_LABELS[0];
     saveSettings();
   });
   els.summaryModeSelect.addEventListener('change', () => {
@@ -124,11 +126,11 @@ function bindSettings() {
   if (els.twoAgentToggle) {
     els.twoAgentToggle.addEventListener('change', (e) => toggleServerSwitch('twoagent', e.target.checked));
   }
-  if (els.summaryStrengthSelect) {
-    els.summaryStrengthSelect.addEventListener('change', async () => {
+  if (els.summaryStrengthSlider) {
+    els.summaryStrengthSlider.addEventListener('change', async () => {
       const token = state.settings.adminToken;
-      const strength = els.summaryStrengthSelect.value;
-      const labels = { short: '短（120字提要）', normal: '中（约300字）', long: '长（约600字）' };
+      const i = Number(els.summaryStrengthSlider.value) || 0;
+      const strength = SUMMARY_STRENGTHS[i] || 'short';
       if (!token) {
         toast('请先填写管理员口令（config.json 里的 adminToken）');
         fetchState();
@@ -146,7 +148,8 @@ function bindSettings() {
           fetchState();
           return;
         }
-        toast(`压缩强度已设为：${labels[strength] || strength}`);
+        els.summaryStrengthValue.textContent = SUMMARY_STRENGTH_LABELS[i] || SUMMARY_STRENGTH_LABELS[0];
+        toast(`压缩强度已设为：${SUMMARY_STRENGTH_LABELS[i] || strength}`);
         fetchState();
       } catch (_) {
         toast('操作失败，请检查口令');

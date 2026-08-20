@@ -23,7 +23,8 @@ export const els = {
   fetchModelsBtn: $('fetchModelsBtn'),
   tempInput: $('tempInput'),
   tempValue: $('tempValue'),
-  thinkingModeSelect: $('thinkingModeSelect'),
+  thinkingModeSlider: $('thinkingModeSlider'),
+  thinkingModeValue: $('thinkingModeValue'),
   summaryModeSelect: $('summaryModeSelect'),
   summaryApiKeyInput: $('summaryApiKeyInput'),
   summaryBaseUrlInput: $('summaryBaseUrlInput'),
@@ -90,8 +91,15 @@ export const els = {
   adminTokenInput: $('adminTokenInput'),
   autoChatToggle: $('autoChatToggle'),
   twoAgentToggle: $('twoAgentToggle'),
-  summaryStrengthSelect: $('summaryStrengthSelect')
+  summaryStrengthSlider: $('summaryStrengthSlider'),
+  summaryStrengthValue: $('summaryStrengthValue')
 };
+
+// 滑块档位映射（滑块位置 ↔ 档位名）
+export const THINKING_MODES = ['none', 'low', 'high', 'max'];
+export const SUMMARY_STRENGTHS = ['short', 'normal', 'long'];
+export const THINKING_MODE_LABELS = ['无（none）', '低（low）', '高（high）', '最高（max）'];
+export const SUMMARY_STRENGTH_LABELS = ['短（short · 120字提要）', '中（normal · 约300字）', '长（long · 约600字）'];
 
 export const CHARACTERS = {
   reimu: { name: '灵梦', full: '博丽灵梦', avatar: 'avatars/reimu_head.png' },

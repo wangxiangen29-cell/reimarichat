@@ -977,6 +977,25 @@ input::placeholder {
   color: var(--ink);
 }
 
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.slider-row input[type="range"] {
+  flex: 1;
+  accent-color: var(--marisa);
+}
+
+.slider-row span {
+  min-width: 150px;
+  text-align: right;
+  color: var(--ink);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
 .settings-hint {
   margin: 12px 0 0;
   font-size: 12px;

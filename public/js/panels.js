@@ -1,4 +1,4 @@
-import { els, state, saveSettings } from './core.js';
+import { els, state, saveSettings, THINKING_MODES, THINKING_MODE_LABELS } from './core.js';
 import { toast } from './render.js';
 
 // ---------- AI 设置表单 ----------
@@ -8,7 +8,10 @@ export function renderSettings() {
   els.modelInput.value = state.settings.model;
   els.tempInput.value = String(state.settings.temperature);
   els.tempValue.textContent = state.settings.temperature.toFixed(2);
-  els.thinkingModeSelect.value = state.settings.thinkingMode || 'none';
+  const tmv = String(state.settings.thinkingMode || 'none').toLowerCase();
+  const tmi = THINKING_MODES.indexOf(tmv) === -1 ? 0 : THINKING_MODES.indexOf(tmv);
+  els.thinkingModeSlider.value = String(tmi);
+  els.thinkingModeValue.textContent = THINKING_MODE_LABELS[tmi] || THINKING_MODE_LABELS[0];
   els.summaryModeSelect.value = state.settings.summaryMode || 'builtin';
   els.summaryApiKeyInput.value = state.settings.summaryApiKey;
   els.summaryBaseUrlInput.value = state.settings.summaryBaseUrl;
