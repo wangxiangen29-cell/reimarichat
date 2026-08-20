@@ -1,4 +1,4 @@
-import { els, CHARACTERS, state } from './core.js';
+import { els, CHARACTERS, state, sleepMs } from './core.js';
 
 // ---------- 提示 ----------
 let toastTimer = null;
@@ -75,6 +75,24 @@ export function appendMessageSplit(speaker, text, container) {
       continue;
     }
     appendMessage(speaker, part, container);
+  }
+}
+
+// 逐句延迟版：把完整长句拆成短句后，一句一句带停顿地显示（自动闲聊用，模拟真人说话节奏）
+export async function appendMessageSplitAnimated(speaker, text, container) {
+  const sentences = splitSentences(text);
+  const raw = String(text || '').trim();
+  const parts = sentences.length ? sentences : [raw].filter(Boolean);
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    if (parts.length === 1 && /^[\s，。！？!?…—、；：,.!?~～…·]+$/.test(part) && mergePunctOnly(speaker, part, container)) {
+      continue;
+    }
+    appendMessage(speaker, part, container);
+    if (i < parts.length - 1) {
+      const endsStrong = /[！？。!?…—]$/.test(part);
+      await sleepMs(endsStrong ? 380 + Math.random() * 260 : 300 + Math.random() * 240);
+    }
   }
 }
 

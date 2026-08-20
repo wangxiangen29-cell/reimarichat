@@ -8,6 +8,7 @@ export function renderSettings() {
   els.modelInput.value = state.settings.model;
   els.tempInput.value = String(state.settings.temperature);
   els.tempValue.textContent = state.settings.temperature.toFixed(2);
+  els.thinkingModeSelect.value = state.settings.thinkingMode || 'none';
   els.summaryModeSelect.value = state.settings.summaryMode || 'builtin';
   els.summaryApiKeyInput.value = state.settings.summaryApiKey;
   els.summaryBaseUrlInput.value = state.settings.summaryBaseUrl;
@@ -18,6 +19,7 @@ export function renderSettings() {
   els.checkBaseUrlInput.value = state.settings.checkBaseUrl;
   els.checkModelInput.value = state.settings.checkModel;
   els.checkCustomRow.hidden = state.settings.checkMode !== 'on';
+  if (els.adminTokenInput) els.adminTokenInput.value = state.settings.adminToken || '';
 }
 
 // ---------- 模型列表 ----------

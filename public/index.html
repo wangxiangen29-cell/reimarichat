@@ -111,7 +111,16 @@
                 <span id="tempValue">0.85</span>
               </div>
             </label>
+            <label>思考模式
+              <select id="thinkingModeSelect">
+                <option value="none">无（none）</option>
+                <option value="low">低（low）</option>
+                <option value="high">高（high）</option>
+                <option value="max">最高（max）</option>
+              </select>
+            </label>
           </div>
+          <p class="settings-hint">思考模式控制 AI 推理深度：none 不思考、最快最省；low / high / max 会先推理再回答，越深越慢越费 token，也更擅长接住复杂剧情。自动闲聊使用 config.json 里的 thinkingMode（管理员配置）。</p>
           <div class="api-extras">
             <h4>总结 API 与自查 AI</h4>
             <label>总结 API 模式
@@ -151,6 +160,17 @@
             <p class="settings-hint">自查 AI 使用你自己的 API，开启后每次输出前会多一次检查调用；总结可单独配置，也可以直接用内置。</p>
           </div>
         </form>
+        <div class="admin-panel">
+          <h4>后台管理（服务器级开关）</h4>
+          <label>管理员口令
+            <input id="adminTokenInput" type="password" autocomplete="off" placeholder="config.json 里的 adminToken">
+          </label>
+          <div class="admin-switches">
+            <label><input type="checkbox" id="autoChatToggle"> 自动闲聊</label>
+            <label><input type="checkbox" id="twoAgentToggle"> 双 agent 真实对话</label>
+          </div>
+          <p class="settings-hint">这两个是服务器级开关，需管理员口令才能改；口令见 config.json 的 adminToken 或启动日志。</p>
+        </div>
         <p class="settings-hint">
           不填 Key 时自动使用内置台词演示；填了 Key 就由 AI 实时对话。
           Key 只保存在浏览器本地、只发给本地服务器，不会写进日志。

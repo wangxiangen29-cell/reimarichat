@@ -23,6 +23,7 @@ export const els = {
   fetchModelsBtn: $('fetchModelsBtn'),
   tempInput: $('tempInput'),
   tempValue: $('tempValue'),
+  thinkingModeSelect: $('thinkingModeSelect'),
   summaryModeSelect: $('summaryModeSelect'),
   summaryApiKeyInput: $('summaryApiKeyInput'),
   summaryBaseUrlInput: $('summaryBaseUrlInput'),
@@ -85,7 +86,10 @@ export const els = {
   manualView: $('manualView'),
   autoView: $('autoView'),
   autoChatLog: $('autoChatLog'),
-  autoWelcome: $('autoWelcome')
+  autoWelcome: $('autoWelcome'),
+  adminTokenInput: $('adminTokenInput'),
+  autoChatToggle: $('autoChatToggle'),
+  twoAgentToggle: $('twoAgentToggle')
 };
 
 export const CHARACTERS = {
@@ -105,6 +109,7 @@ function loadSettings() {
         baseUrl: 'https://api.deepseek.com/v1',
         model: 'deepseek-v4-flash',
         temperature: 0.85,
+        thinkingMode: 'none',
         personaBaseReimu: '',
         personaExtraReimu: '',
         personaBaseMarisa: '',
@@ -121,7 +126,8 @@ function loadSettings() {
         canonMarisa: '',
         canonWorld: '',
         canonPair: '',
-        canonNotes: ''
+        canonNotes: '',
+        adminToken: ''
       },
       JSON.parse(localStorage.getItem(STORE_KEY) || '{}')
     );
@@ -131,6 +137,7 @@ function loadSettings() {
       baseUrl: 'https://api.deepseek.com/v1',
       model: 'deepseek-v4-flash',
       temperature: 0.85,
+      thinkingMode: 'none',
       personaBaseReimu: '',
       personaExtraReimu: '',
       personaBaseMarisa: '',

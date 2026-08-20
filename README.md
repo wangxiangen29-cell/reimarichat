@@ -58,6 +58,7 @@ AI 调用自带可靠性保护：空内容、网络抖动、限流（429）和 5
 
 - `aiEnabled`：内置 AI 开关，`false` 时自动退回演示台词。
 - `autoChatEnabled`：自动闲聊开关，`true` 时两人持续对话。
+- `twoAgentMode`：双 agent 真实对话开关（默认 `false`）。设为 `true` 后，自动闲聊不再「一个编剧一次批量生成双方台词」，而是灵梦、魔理沙两个独立 agent 各自只生成自己的一句完整台词、按各自节奏触发（灵梦响应慢、魔理沙响应快），偶尔同一人连说两句或沉默一拍；完整台词存历史喂给另一个 agent，前端自动拆成短句气泡显示。仅影响自动闲聊。
 - `autoPersonaReimu` / `autoPersonaMarisa`：自动闲聊的人设。
 - `personaReimu` / `personaMarisa`：手动对谈的默认人设（观众可在页面里用自己的版本覆盖）。
 - `canonReimu` / `canonMarisa` / `canonWorld` / `canonPair` / `canonAiNotes`：自动闲聊使用的默认一设数据库（灵梦、魔理沙、世界观、主角组关系、AI 易错提醒）。

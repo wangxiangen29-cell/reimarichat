@@ -1,5 +1,5 @@
 import { els, state, sleepMs } from './core.js';
-import { toast, appendSystem, appendMessageSplit, appendTyping, removeTyping, scrollToBottom } from './render.js';
+import { toast, appendSystem, appendMessageSplit, appendMessageSplitAnimated, appendTyping, removeTyping, scrollToBottom } from './render.js';
 
 // ---------- 模式徽章与控件状态 ----------
 export function updateModeBadge() {
@@ -62,11 +62,14 @@ export async function fetchState() {
       hasServerKey: data.hasServerKey,
       aiEnabled: data.aiEnabled,
       autoChatEnabled: data.autoChatEnabled,
+      twoAgentMode: data.twoAgentMode !== false,
       currentTopic: data.currentTopic,
       summarizeAfter: Number(data.summarizeAfter) || 0,
       summaryKeepRecent: Number(data.summaryKeepRecent) || 6
     };
     updateAutoPanel(data);
+    if (els.autoChatToggle) els.autoChatToggle.checked = !!data.autoChatEnabled;
+    if (els.twoAgentToggle) els.twoAgentToggle.checked = data.twoAgentMode !== false;
     if (data.autoChatEnabled) {
       if (!state.autoActive) {
         enterAutoMode(data);
@@ -217,7 +220,7 @@ async function renderNewAutoEntries(log) {
       await sleepMs(320 + Math.random() * 260);
       removeTyping(tw);
       await sleepMs(70 + Math.random() * 110);
-      appendMessageSplit(entry.type, entry.text, els.autoChatLog);
+      await appendMessageSplitAnimated(entry.type, entry.text, els.autoChatLog);
     }
     state.lastAutoMsgId = entry.id;
     state.suppressScroll = false;

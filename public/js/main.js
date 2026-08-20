@@ -26,6 +26,31 @@ import {
 } from './auto.js';
 import { startConversation, queueInterjection } from './chat.js';
 
+// ---------- 后台开关（服务器级，需管理员口令） ----------
+async function toggleServerSwitch(action, enabled) {
+  const token = state.settings.adminToken;
+  if (!token) {
+    toast('请先填写管理员口令（config.json 里的 adminToken）');
+    return;
+  }
+  try {
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, action, enabled })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.error) {
+      toast(data.error || '操作失败');
+      return;
+    }
+    toast(enabled ? '已开启' : '已关闭');
+    fetchState();
+  } catch (_) {
+    toast('操作失败，请检查口令');
+  }
+}
+
 // ---------- 事件绑定 ----------
 function bindSettings() {
   const form = $('settingsForm');
@@ -47,6 +72,10 @@ function bindSettings() {
   els.tempInput.addEventListener('input', () => {
     state.settings.temperature = Number(els.tempInput.value);
     els.tempValue.textContent = state.settings.temperature.toFixed(2);
+    saveSettings();
+  });
+  els.thinkingModeSelect.addEventListener('change', () => {
+    state.settings.thinkingMode = els.thinkingModeSelect.value;
     saveSettings();
   });
   els.summaryModeSelect.addEventListener('change', () => {
@@ -83,6 +112,18 @@ function bindSettings() {
     state.settings.checkModel = els.checkModelInput.value.trim();
     saveSettings();
   });
+  if (els.adminTokenInput) {
+    els.adminTokenInput.addEventListener('input', () => {
+      state.settings.adminToken = els.adminTokenInput.value.trim();
+      saveSettings();
+    });
+  }
+  if (els.autoChatToggle) {
+    els.autoChatToggle.addEventListener('change', (e) => toggleServerSwitch('autochat', e.target.checked));
+  }
+  if (els.twoAgentToggle) {
+    els.twoAgentToggle.addEventListener('change', (e) => toggleServerSwitch('twoagent', e.target.checked));
+  }
   els.settingsBtn.addEventListener('click', () => {
     if (!els.personaPanel.hidden) {
       closePersonaPanel();
