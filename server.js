@@ -11,6 +11,10 @@ const {
   baseHeaders,
   handleChat,
   handleChatBatch,
+  handleTts,
+  handleEmotionsGet,
+  handleEmotionsWrite,
+  handlePortraitSave,
   handleSummarize,
   handleModels,
   handleState,
@@ -78,6 +82,24 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && pathname === '/api/chat') {
       const body = await readBody(req);
       return await handleChat(req, res, body);
+    }
+
+    if (req.method === 'GET' && pathname === '/api/tts') {
+      return await handleTts(req, res, url.searchParams);
+    }
+
+    if (req.method === 'POST' && pathname === '/api/portraits') {
+      const body = await readBody(req);
+      return await handlePortraitSave(req, res, body);
+    }
+
+    if (req.method === 'GET' && pathname === '/api/emotions') {
+      return handleEmotionsGet(req, res);
+    }
+
+    if (req.method === 'POST' && pathname === '/api/emotions') {
+      const body = await readBody(req);
+      return handleEmotionsWrite(req, res, body);
     }
 
     if (req.method === 'POST' && pathname === '/api/clear') {

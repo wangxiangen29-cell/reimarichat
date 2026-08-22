@@ -1,7 +1,23 @@
-import { els, state, demoEngine, sleepMs } from './core.js';
-import { toast, appendMessage, appendSystem, appendNarration, appendTyping, removeTyping, splitSentences, mergePunctOnly } from './render.js';
+import { els, state, demoEngine } from './core.js';
+import { toast, appendMessage, appendSystem, appendNarration, splitSentences } from './render.js';
 import { syncControls, updateModeBadge } from './auto.js';
 import { assemblePersona, assembleCanon, canonCustomized } from './panels.js';
+import { enqueueGal, beginGal, endGal, setProducerGal, waitDrainGal, resetGal } from './gal.js';
+import { openDrawer, closeDrawer } from './drawer.js';
+
+function isAiNetworkError(err) {
+  return /fetch failed|网络|ECONNRESET|ETIMEDOUT|ENOTFOUND|ECONNREFUSED|EACCES|socket hang up/i.test(String(err?.message || err || ''));
+}
+
+function syncStageMeta() {
+  const topic = document.getElementById('manualTopicBadge');
+  const progress = document.getElementById('dialogueProgress');
+  if (topic) topic.textContent = state.manualTopic ? `话题：${state.manualTopic}` : '等待你的开场';
+  if (progress) {
+    const lines = state.history.filter((entry) => entry.speaker === 'reimu' || entry.speaker === 'marisa').length;
+    progress.textContent = lines ? `SCENE ${String(lines).padStart(2, '0')}` : '—';
+  }
+}
 
 // ---------- 手动对谈 ----------
 export function nextCharacterSpeaker() {
@@ -28,7 +44,7 @@ async function persistManual(entries) {
 }
 
 export function openManualHistory() {
-  els.manualHistoryModal.hidden = false;
+  openDrawer('history');
   renderManualHistory();
 }
 
@@ -105,45 +121,36 @@ export async function loadManualSession(id) {
       .map((m) => ({ speaker: m.speaker, text: m.text }));
     els.topicInput.value = state.manualTopic || '';
     els.chatLog.innerHTML = '';
+    resetGal('manual');
     if (state.manualTopic) appendNarration('（开场话题）' + state.manualTopic);
     for (const m of state.history) {
       if (m.speaker === 'user') appendNarration(m.text);
       else if (m.speaker === 'system') appendSystem(m.text);
       else appendMessage(m.speaker, m.text);
     }
-    els.manualHistoryModal.hidden = true;
+    closeDrawer();
     syncControls();
     toast('已载入历史对话，可直接继续。');
   } catch (err) {
     toast(err.message || '载入失败');
   }
 }
-async function renderReply(speaker, text) {
+async function renderReply(speaker, text, emotion) {
   if (!text || state.stopRequested) return false;
   const sentences = splitSentences(text);
   const parts = sentences.length ? sentences : [String(text).trim()].filter(Boolean);
   state.history.push({ speaker, text });
+  syncStageMeta();
   persistManual([{ speaker, text }]);
 
-  const typingRow = appendTyping(speaker);
-  const typingMs = Math.min(1500, 280 + Array.from(text).length * 9) + Math.random() * 220;
-  await sleepMs(typingMs);
-  removeTyping(typingRow);
+  // Galgame 式：台词逐句进队列，由用户点击推进；全部点完才继续生成下一轮
+  // AI 在批量协议里给整条 reply 标注的立绘情绪（switch_portrait），继承到每个短句
+  for (const part of parts) {
+    enqueueGal('manual', speaker, part, emotion);
+  }
+  await waitDrainGal('manual');
   if (state.stopRequested) return false;
 
-  if (parts.length === 1 && /^[\s，。！？!?…—、；：,.!?~～…·]+$/.test(parts[0]) && mergePunctOnly(speaker, parts[0])) {
-    await maybeSummarizeManual();
-    return true;
-  }
-
-  for (let i = 0; i < parts.length; i++) {
-    appendMessage(speaker, parts[i]);
-    if (i < parts.length - 1) {
-      const endsStrong = /[！？。!?…—]$/.test(parts[i]);
-      await sleepMs(endsStrong ? 380 + Math.random() * 260 : 300 + Math.random() * 240);
-      if (state.stopRequested) return false;
-    }
-  }
   await maybeSummarizeManual();
   return true;
 }
@@ -152,6 +159,7 @@ async function speak(speaker) {
   if (state.stopRequested) return null;
   state.busy = true;
   syncControls();
+  setProducerGal('manual', true);
   let text = '';
   try {
     if (state.mode === 'ai') {
@@ -162,19 +170,28 @@ async function speak(speaker) {
   } catch (err) {
     const msg = err.message || '';
     if (msg.includes('管理员关闭')) {
+      state.aiUnavailable = false;
       state.mode = 'demo';
       updateModeBadge();
       toast('内置 AI 已关闭，本次对话使用演示台词');
       text = await demoReply(speaker);
+    } else if (isAiNetworkError(err)) {
+      state.aiUnavailable = true;
+      state.mode = 'demo';
+      updateModeBadge();
+      toast('AI 服务暂时无法连接，已切换到演示台词；请检查接口地址或网络后再试');
+      text = await demoReply(speaker);
     } else {
       toast(msg || '出错了，请重试');
       state.stopRequested = true;
+      setProducerGal('manual', false);
       state.busy = false;
       syncControls();
       return null;
     }
   }
   const ok = await renderReply(speaker, text);
+  setProducerGal('manual', false);
   state.busy = false;
   syncControls();
   return ok ? text : null;
@@ -190,8 +207,9 @@ async function askBatch(speaker, count) {
       history: state.history,
       turns: count,
       apiKey: state.settings.apiKey || undefined,
-      baseUrl: state.settings.baseUrl,
-      model: state.settings.model,
+      // 未自填 Key 时走服务器内置配置；本地保存的自定义地址/模型不随请求发送
+      baseUrl: state.settings.apiKey ? state.settings.baseUrl : undefined,
+      model: state.settings.apiKey ? state.settings.model : undefined,
       temperature: state.settings.temperature,
       thinkingMode: state.settings.thinkingMode,
       personas: { reimu: assemblePersona('reimu'), marisa: assemblePersona('marisa') },
@@ -220,8 +238,9 @@ async function askAI(speaker) {
       topic: state.manualTopic || '随便聊聊',
       history: state.history,
       apiKey: state.settings.apiKey || undefined,
-      baseUrl: state.settings.baseUrl,
-      model: state.settings.model,
+      // 未自填 Key 时走服务器内置配置；本地保存的自定义地址/模型不随请求发送
+      baseUrl: state.settings.apiKey ? state.settings.baseUrl : undefined,
+      model: state.settings.apiKey ? state.settings.model : undefined,
       temperature: state.settings.temperature,
       thinkingMode: state.settings.thinkingMode,
       persona: assemblePersona(speaker),
@@ -289,10 +308,13 @@ function demoReply(speaker) {
 
 export async function startConversation() {
   if (state.running || state.busy) return;
+  state.aiUnavailable = false;
+  updateModeBadge();
   state.stopRequested = false;
   const continuing = state.history.length > 0;
   if (!continuing) {
     state.manualTopic = els.topicInput.value.trim();
+    syncStageMeta();
     state.manualSummary = '';
     state.history = [];
     demoEngine.reset();
@@ -307,10 +329,11 @@ export async function startConversation() {
       if (res.ok && d.session) state.manualSessionId = d.session.id;
     } catch (_) {}
     if (state.manualTopic) {
-      appendNarration(`（开场话题）${state.manualTopic}`);
+      enqueueGal('manual', 'user', `（开场话题）${state.manualTopic}`);
     }
   } else if (els.topicInput.value.trim()) {
     state.manualTopic = els.topicInput.value.trim();
+    syncStageMeta();
   }
   const total = Number(els.roundsSelect.value) * 2;
   state.pendingTurns = total;
@@ -318,6 +341,8 @@ export async function startConversation() {
   state.running = true;
   syncControls();
   if (continuing) toast('继续上一段对话');
+  // 批量台词会一次性预取回来，之后全部交给点击推进
+  beginGal('manual');
 
   const speaker = nextCharacterSpeaker();
   let replies = [];
@@ -327,9 +352,15 @@ export async function startConversation() {
     } catch (err) {
       const msg = err.message || '';
       if (msg.includes('管理员关闭')) {
+        state.aiUnavailable = false;
         state.mode = 'demo';
         updateModeBadge();
         toast('内置 AI 已关闭，本次对话使用演示台词');
+      } else if (isAiNetworkError(err)) {
+        state.aiUnavailable = true;
+        state.mode = 'demo';
+        updateModeBadge();
+        toast('AI 服务暂时无法连接，已切换到演示台词；请检查接口地址或网络后再试');
       } else {
         toast(msg || '出错了，请重试');
         state.stopRequested = true;
@@ -344,20 +375,24 @@ export async function startConversation() {
       sp = sp === 'marisa' ? 'reimu' : 'marisa';
     }
   }
-  for (const item of replies) {
-    if (state.stopRequested || !state.running) break;
-    const ok = await renderReply(item.speaker, item.text);
-    if (!ok) break;
-    state.pendingTurns--;
+  try {
+    for (const item of replies) {
+      if (state.stopRequested || !state.running) break;
+      const ok = await renderReply(item.speaker, item.text, item.emotion);
+      if (!ok) break;
+      state.pendingTurns--;
+    }
+    await drainInterjections();
+  } finally {
+    endGal('manual');
+    state.running = false;
+    state.busy = false;
+    syncControls();
+    if (state.stopRequested && state.history.length) {
+      toast('已停止，可以继续插话或重新开始。');
+    }
+    state.stopRequested = false;
   }
-  await drainInterjections();
-  state.running = false;
-  state.busy = false;
-  syncControls();
-  if (state.stopRequested && state.history.length) {
-    toast('已停止，可以继续插话或重新开始。');
-  }
-  state.stopRequested = false;
 }
 
 export function queueInterjection() {
@@ -370,7 +405,8 @@ export function queueInterjection() {
     state.interjectQueue.push(text);
     toast(state.busy ? '收到，等角色说完就接上。' : '收到，马上轮到。');
   } else {
-    appendNarration(text);
+    // 旁白先进队列展示，同时立刻开始生成回应（预取，用户点完旁白时多半已生成好）
+    enqueueGal('manual', 'user', text);
     state.history.push({ speaker: 'user', text });
     persistManual([{ speaker: 'user', text }]);
     speak(nextCharacterSpeaker()).then(() => drainInterjections()).then(() => syncControls());
@@ -380,7 +416,7 @@ export function queueInterjection() {
 async function drainInterjections() {
   while (state.interjectQueue.length && !state.stopRequested) {
     const text = state.interjectQueue.shift();
-    appendNarration(text);
+    enqueueGal('manual', 'user', text);
     state.history.push({ speaker: 'user', text });
     persistManual([{ speaker: 'user', text }]);
     await speak(nextCharacterSpeaker());

@@ -1,15 +1,13 @@
 import { $, els, state, saveSettings, THINKING_MODES, THINKING_MODE_LABELS, SUMMARY_STRENGTHS, SUMMARY_STRENGTH_LABELS } from './core.js';
-import { openAbout, closeAbout, toast } from './render.js';
+import { toast } from './render.js';
 import {
   renderSettings,
   fetchModels,
   openPersonaPanel,
-  closePersonaPanel,
   refreshPromptPreviews,
   savePersonas,
   resetPersonas,
   openCanonPanel,
-  closeCanonPanel,
   saveCanon,
   resetCanon
 } from './panels.js';
@@ -24,7 +22,10 @@ import {
   proposeTopic,
   sendGift
 } from './auto.js';
-import { startConversation, queueInterjection, openManualHistory } from './chat.js';
+import { startConversation, queueInterjection, openManualHistory, renderManualHistory } from './chat.js';
+import { initVoice } from './voice.js';
+import { initGal, advanceActive, flushGal } from './gal.js';
+import { initDrawer, openDrawer, closeDrawer, isDrawerOpen } from './drawer.js';
 
 // ---------- 后台开关（服务器级，需管理员口令） ----------
 async function toggleServerSwitch(action, enabled) {
@@ -57,6 +58,7 @@ function bindSettings() {
   if (form) form.addEventListener('submit', (e) => e.preventDefault());
   els.apiKeyInput.addEventListener('input', () => {
     state.settings.apiKey = els.apiKeyInput.value.trim();
+    state.aiUnavailable = false;
     saveSettings();
     updateModeBadge();
   });
@@ -157,45 +159,12 @@ function bindSettings() {
       }
     });
   }
-  els.settingsBtn.addEventListener('click', () => {
-    if (!els.personaPanel.hidden) {
-      closePersonaPanel();
-    }
-    if (!els.canonPanel.hidden) closeCanonPanel();
-    els.settingsPanel.hidden = !els.settingsPanel.hidden;
-  });
-  els.personaBtn.addEventListener('click', () => {
-    if (!els.canonPanel.hidden) closeCanonPanel();
-    if (!els.personaPanel.hidden) {
-      closePersonaPanel();
-    } else {
-      openPersonaPanel();
-    }
-  });
-  els.personaCloseBtn.addEventListener('click', closePersonaPanel);
+  els.settingsBtn.addEventListener('click', () => openDrawer());
+  // 从抽屉导航直达历史区时也拉取列表
+  const historyNav = document.querySelector('.drawer-nav [data-section="history"]');
+  if (historyNav) historyNav.addEventListener('click', () => renderManualHistory());
   els.personaSaveBtn.addEventListener('click', savePersonas);
   els.personaResetBtn.addEventListener('click', resetPersonas);
-  els.aboutBtn.addEventListener('click', openAbout);
-  els.aboutCloseBtn.addEventListener('click', closeAbout);
-  els.manualHistoryBtn.addEventListener('click', openManualHistory);
-  els.manualHistoryCloseBtn.addEventListener('click', () => { els.manualHistoryModal.hidden = true; });
-  els.manualHistoryModal.addEventListener('click', (e) => { if (e.target === els.manualHistoryModal) els.manualHistoryModal.hidden = true; });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !els.manualHistoryModal.hidden) els.manualHistoryModal.hidden = true; });
-  els.aboutModal.addEventListener('click', (e) => {
-    if (e.target === els.aboutModal) closeAbout();
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !els.aboutModal.hidden) closeAbout();
-  });
-  els.canonBtn.addEventListener('click', () => {
-    if (!els.personaPanel.hidden) closePersonaPanel();
-    if (!els.canonPanel.hidden) {
-      closeCanonPanel();
-    } else {
-      openCanonPanel();
-    }
-  });
-  els.canonCloseBtn.addEventListener('click', closeCanonPanel);
   els.canonSaveBtn.addEventListener('click', saveCanon);
   els.canonResetBtn.addEventListener('click', resetCanon);
   [
@@ -219,6 +188,8 @@ function bindEvents() {
     state.stopRequested = true;
     state.running = false;
     state.busy = false;
+    // 立即把没点完的台词收进记录，并唤醒正在等待点击的生成流程
+    flushGal('manual', { keepBacklog: true });
     syncControls();
     toast('已停止。');
   });
@@ -256,11 +227,34 @@ function bindEvents() {
   els.topicProposalInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') proposeTopic();
   });
+  document.querySelectorAll('.choice-btn[data-topic]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      els.topicInput.value = btn.dataset.topic || '';
+      els.topicInput.focus();
+      if (!state.running && !state.busy) startConversation();
+    });
+  });
+  // Galgame 式推进：回车 / 空格等于点击对话框
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (isDrawerOpen()) closeDrawer();
+      return;
+    }
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.tagName === 'BUTTON' || t.isContentEditable)) return;
+    if (isDrawerOpen()) return;
+    e.preventDefault();
+    advanceActive();
+  });
 }
 
 // ---------- 启动 ----------
 function init() {
   renderSettings();
+  initVoice();
+  initGal();
+  initDrawer();
   bindSettings();
   bindEvents();
   syncControls();

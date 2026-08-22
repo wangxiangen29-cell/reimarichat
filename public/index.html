@@ -5,94 +5,147 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>红白与黑白 · 灵梦 × 魔理沙</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23e8dcae'/%3E%3Ccircle cx='24' cy='24' r='7' fill='%23b8a876' opacity='0.5'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style.css?v=28">
+  <link rel="stylesheet" href="style.css?v=36">
 </head>
 <body>
-  <!-- 夜空背景 -->
+  <!-- 神社背景（用户自带插画素材）+ 余韵装饰 -->
   <div class="sky" aria-hidden="true">
+    <div class="bg-photo"></div>
     <div class="stars"></div>
-    <div class="moon"></div>
-    <div class="cloud cloud-1"></div>
-    <div class="cloud cloud-2"></div>
-    <div class="ofuda ofuda-1"></div>
-    <div class="ofuda ofuda-2"></div>
-    <div class="ofuda ofuda-3"></div>
     <div class="spirit spirit-1"></div>
-    <div class="spirit spirit-2"></div>
     <div class="spirit spirit-3"></div>
-    <div class="spirit spirit-4"></div>
-    <div class="torii"></div>
   </div>
 
   <div class="page">
-    <header class="header">
-      <div class="header-inner">
-        <h1>红白与黑白</h1>
-        <p class="subtitle">主角组 · 博丽灵梦 × 雾雨魔理沙</p>
-        <div class="cast">
-          <span class="chip chip-reimu">博丽灵梦</span>
-          <i>×</i>
-          <span class="chip chip-marisa">雾雨魔理沙</span>
-        </div>
-        <div class="badge-row">
-          <span class="mode-badge demo" id="modeBadge">演示模式</span>
-          <span class="status-dot" id="statusDot" title="连接状态"></span>
-          <button class="btn small ghost about-btn" id="aboutBtn" type="button">关于本站</button>
-        </div>
+    <header class="topbar">
+      <div class="brand-mini">
+        <strong>红白与黑白</strong>
+        <span class="mode-badge demo" id="modeBadge">演示模式</span>
+      </div>
+      <nav class="view-switch" aria-label="切换界面">
+        <button class="view-tab active" id="manualTab" type="button">对谈</button>
+        <button class="view-tab" id="autoTab" type="button">闲聊</button>
+      </nav>
+      <div class="top-actions">
+        <span class="status-dot" id="statusDot" title="服务器连接状态" aria-label="服务器连接状态"></span>
+        <button class="icon-btn" id="settingsBtn" type="button" aria-label="打开设置" title="设置">⚙</button>
       </div>
     </header>
 
-    <nav class="view-tabs" aria-label="切换界面">
-      <button class="view-tab active" id="manualTab" type="button">手动对谈</button>
-      <button class="view-tab" id="autoTab" type="button">自动闲聊</button>
-    </nav>
-
     <div class="view" id="manualView">
-      <div class="manual-env" id="manualEnv" hidden>
-        <span class="topic-chip scene-chip" id="manualSceneChip"></span>
-        <span class="topic-chip weather-chip" id="manualWeatherChip"></span>
-      </div>
-      <main class="chat">
-        <div class="chat-log" id="chatLog" role="log" aria-live="polite">
-          <div class="welcome" id="welcome">
-            <p>两位主角正在神社前等你开场。</p>
-            <p>设定一个话题，比如「今天的异变」「蘑菇收成」「香油钱」……</p>
-          </div>
+      <section class="gal-stage" aria-label="幻想乡对话场景">
+        <div class="scene-orbit orbit-left" aria-hidden="true"></div>
+        <div class="scene-orbit orbit-right" aria-hidden="true"></div>
+        <div class="portrait portrait-reimu" id="reimuPortrait" aria-hidden="true">
+          <div class="portrait-label">REIMU <small>博丽灵梦</small></div>
+          <img src="avatars/reimu_full.png" alt="">
         </div>
-      </main>
+        <div class="portrait portrait-marisa" id="marisaPortrait" aria-hidden="true">
+          <div class="portrait-label">MARISA <small>雾雨魔理沙</small></div>
+          <img src="avatars/marisa_full.png" alt="">
+        </div>
+        <div class="scene-vignette" aria-hidden="true"></div>
+        <div class="manual-env" id="manualEnv" hidden>
+          <span class="topic-chip scene-chip" id="manualSceneChip"></span>
+          <span class="topic-chip weather-chip" id="manualWeatherChip"></span>
+        </div>
+        <main class="dialogue-shell">
+          <div class="dialogue-topline">
+            <span class="dialogue-location">博丽神社 · 后院</span>
+            <span class="dialogue-topic" id="manualTopicBadge">等待你的开场</span>
+            <button type="button" class="btn small ghost backlog-btn" id="manualBacklogBtn">记录</button>
+            <span class="dialogue-progress" id="dialogueProgress">—</span>
+          </div>
+          <div class="gal-box" id="galBox" title="点击推进对话">
+            <div class="gal-nameplate" id="galNameplate" hidden></div>
+            <div class="gal-text" id="galText">
+              <div class="gal-idle">
+                <p>两位主角正在神社前等你开场。</p>
+                <p>从下方选择一个话题，或写下你想让她们聊的事。</p>
+              </div>
+            </div>
+            <span class="gal-cursor" id="galCursor" hidden>▼</span>
+            <div class="gal-hint" id="galHint" hidden></div>
+          </div>
+          <div class="chat-log gal-backlog" id="chatLog" hidden></div>
+          <div class="choice-row" aria-label="快捷话题">
+            <button type="button" class="choice-btn" data-topic="神社后山的异变又出现了"><span>Q</span> 后山的异变</button>
+            <button type="button" class="choice-btn" data-topic="今天的蘑菇收成怎么样"><span>W</span> 蘑菇收成</button>
+            <button type="button" class="choice-btn" data-topic="白玉楼的樱花开了"><span>E</span> 去赏花吗</button>
+          </div>
+        </main>
+      </section>
 
-      <section class="controls">
-      <div class="topic-row">
+      <section class="controls" id="controlDock">
         <input id="topicInput" type="text" maxlength="80" placeholder="设定话题，例如：神社后面又出现异变了…"
                autocomplete="off">
         <button class="btn primary" id="startBtn">开始对话</button>
         <button class="btn" id="stopBtn" hidden>停止</button>
+        <button class="btn" id="interjectBtn" title="插一句旁白推进剧情">旁白</button>
         <button class="btn ghost" id="clearBtn" title="清空对话">清空</button>
+        <div class="interject-row" id="interjectRow" hidden>
+          <input id="interjectInput" type="text" maxlength="80" placeholder="加一句旁白，例如：忽然下起了雨…"
+                 autocomplete="off">
+          <button class="btn" id="sendInterjectBtn">发送</button>
+          <button class="btn ghost small" id="cancelInterjectBtn">取消</button>
+        </div>
+      </section>
+    </div>
+
+    <aside class="drawer" id="settingsDrawer" hidden>
+      <div class="drawer-card">
+      <div class="drawer-head">
+        <strong>设置</strong>
+        <button class="icon-btn" id="settingsDrawerClose" type="button" aria-label="关闭设置">✕</button>
       </div>
-      <div class="meta-row">
-        <label class="rounds">轮数
-          <select id="roundsSelect">
-            <option value="3">3</option>
-            <option value="5" selected>5</option>
-            <option value="8">8</option>
-            <option value="12">12</option>
-          </select>
-        </label>
-        <button class="btn small" id="interjectBtn">旁白</button>
-        <button class="btn small" id="personaBtn" title="人设管理">人设</button>
-        <button class="btn small" id="canonBtn" title="一设数据库">一设</button>
-        <button class="btn small" id="settingsBtn">⚙ 设置</button>
-        <button class="btn small" id="manualHistoryBtn" title="历史对话">🗒 历史</button>
-      </div>
-      <div class="interject-row" id="interjectRow" hidden>
-        <input id="interjectInput" type="text" maxlength="80" placeholder="加一句旁白，例如：忽然下起了雨…"
-               autocomplete="off">
-        <button class="btn" id="sendInterjectBtn">发送</button>
-        <button class="btn ghost small" id="cancelInterjectBtn">取消</button>
-      </div>
-      <div class="settings" id="settingsPanel" hidden>
-        <h3>AI 设置</h3>
-        <form id="settingsForm">
+      <nav class="drawer-nav" aria-label="设置分区">
+        <button type="button" data-section="general" class="active">通用</button>
+        <button type="button" data-section="ai">AI</button>
+        <button type="button" data-section="persona">人设</button>
+        <button type="button" data-section="canon">一设</button>
+        <button type="button" data-section="history">历史</button>
+        <button type="button" data-section="admin">管理</button>
+        <button type="button" data-section="about">关于</button>
+      </nav>
+      <div class="drawer-body">
+        <section class="drawer-section" id="drawer-general">
+          <h4>对话轮数</h4>
+          <label class="rounds">轮数（一轮 = 两人各一句）
+            <select id="roundsSelect">
+              <option value="3">3</option>
+              <option value="5" selected>5</option>
+              <option value="8">8</option>
+              <option value="12">12</option>
+            </select>
+          </label>
+          <h4>语音</h4>
+          <div class="voice-row">
+            <button class="btn small voice-btn" id="voiceToggle" type="button" aria-pressed="false">◉ 语音：关</button>
+            <button class="btn small ghost" id="voiceReplayBtn" type="button" title="重播当前台词">↻ 重播</button>
+            <span class="voice-status" id="voiceStatus">浏览器语音待机</span>
+          </div>
+          <details class="voice-drawer" open>
+            <summary>语音引擎与参数</summary>
+            <div class="voice-grid">
+              <label>引擎
+                <select id="voiceModeSelect">
+                  <option value="browser">浏览器语音（无需配置）</option>
+                  <option value="yukkuri">油库里语音（服务器代理）</option>
+                </select>
+              </label>
+              <label>语速 <span id="voiceRateValue">1.0</span>
+                <input id="voiceRateInput" type="range" min="0.6" max="1.5" step="0.05" value="1">
+              </label>
+              <label>音调 <span id="voicePitchValue">1.0</span>
+                <input id="voicePitchInput" type="range" min="0.5" max="1.5" step="0.05" value="1">
+              </label>
+            </div>
+            <p class="voice-hint">油库里语音由本站服务器统一代理，无需任何配置：管理员在服务器上运行 <code>python tools/yukkuri_server.py</code> 即可，灵梦=れいむ、魔理沙=まりさ 自动匹配；语音服务未启动时自动回退浏览器语音。音调仅对浏览器语音生效。</p>
+          </details>
+          <p class="drawer-note">对话框里点击 / 回车 / 空格可以推进台词；点「记录」回看已读内容。</p>
+        </section>
+        <section class="drawer-section" id="drawer-ai" hidden>
+          <form id="settingsForm">
           <div class="settings-grid">
             <label>API Key
               <input id="apiKeyInput" type="password" autocomplete="off" placeholder="sk-…（仅保存在本机浏览器）">
@@ -159,7 +212,14 @@
             <p class="settings-hint">自查 AI 使用你自己的 API，开启后每次输出前会多一次检查调用；总结可单独配置，也可以直接用内置。</p>
           </div>
         </form>
-        <div class="admin-panel">
+          <p class="settings-hint">
+            不填 Key 时自动使用内置台词演示；填了 Key 就由 AI 实时对话。
+            Key 只保存在浏览器本地、只发给本地服务器，不会写进日志。
+            接口兼容 OpenAI 格式的服务（DeepSeek、通义等）也能用。
+          </p>
+        </section>
+        <section class="drawer-section" id="drawer-admin" hidden>
+          <div class="admin-panel">
           <h4>后台管理（服务器级开关）</h4>
           <label>管理员口令
             <input id="adminTokenInput" type="password" autocomplete="off" placeholder="config.json 里的 adminToken">
@@ -175,20 +235,13 @@
             </div>
           </label>
           <p class="settings-hint">这些是服务器级设置，需管理员口令才能改；口令见 config.json 的 adminToken 或启动日志。压缩强度档位越高，攒的对话越多才触发压缩、总结越详细（最低档才是 120 字提要）。</p>
-        </div>
-        <p class="settings-hint">
-          不填 Key 时自动使用内置台词演示；填了 Key 就由 AI 实时对话。
-          Key 只保存在浏览器本地、只发给本地服务器，不会写进日志。
-          接口兼容 OpenAI 格式的服务（DeepSeek、通义等）也能用。
-          「一设」是东方官方设定的参考资料，可自行修改（仅本机生效）；自动闲聊使用的一设由管理员在 config.json 中管理。
-          服务器开关（内置 AI、自动闲聊）与自动闲聊人设在 config.json 中直接修改，保存后自动生效。
-        </p>
-      </div>
-      <div class="persona-panel" id="personaPanel" hidden>
+          </div>
+          <p class="drawer-note">「一设」是东方官方设定的参考资料，可自行修改（仅本机生效）；自动闲聊使用的一设由管理员在 config.json 中管理。服务器开关与自动闲聊人设也在 config.json 中直接修改，保存后自动生效。</p>
+        </section>
+        <section class="drawer-section" id="drawer-persona" hidden>
         <div class="persona-head">
           <h3>人设管理</h3>
           <span class="persona-note">人设 = 基础设定 + 补充设定 + 系统提示词（自动组合）。基础设定与系统提示词不建议修改，补充设定自由发挥；只存在你自己的浏览器里。</span>
-          <button class="btn ghost small" id="personaCloseBtn" type="button">关闭</button>
         </div>
         <div class="persona-block">
           <div class="persona-block-head">
@@ -226,12 +279,11 @@
           <button class="btn primary" id="personaSaveBtn" type="button">保存到本机</button>
           <button class="btn ghost" id="personaResetBtn" type="button">恢复默认</button>
         </div>
-      </div>
-      <div class="persona-panel" id="canonPanel" hidden>
+        </section>
+        <section class="drawer-section" id="drawer-canon" hidden>
         <div class="persona-head">
           <h3>一设数据库</h3>
           <span class="persona-note">内容整理自 THBWiki（东方维基）并概括提取，供 AI 参考，避免角色崩坏。可自行修改，只存在你自己的浏览器里；手动对谈立即生效，自动闲聊使用管理员在 config.json 中配置的一设。</span>
-          <button class="btn ghost small" id="canonCloseBtn" type="button">关闭</button>
         </div>
         <div class="persona-block">
           <div class="persona-block-head">
@@ -258,9 +310,37 @@
           <button class="btn primary" id="canonSaveBtn" type="button">保存到本机</button>
           <button class="btn ghost" id="canonResetBtn" type="button">恢复默认</button>
         </div>
+        </section>
+        <section class="drawer-section" id="drawer-history" hidden>
+          <h3>历史对话</h3>
+          <p class="drawer-note">以下是保存过的历史手动对谈，点击「打开」可查看并继续。</p>
+          <div class="manual-history-list" id="manualHistoryList"></div>
+        </section>
+        <section class="drawer-section" id="drawer-about" hidden>
+          <h3>红白与黑白 · 使用说明</h3>
+          <p>欢迎来到「红白与黑白」茶话会。这是一个让<strong>博丽灵梦</strong>和<strong>雾雨魔理沙</strong>用 AI 互相对话的同人小站，目前提供两种玩法。</p>
+
+          <h4>功能介绍</h4>
+          <ul>
+            <li><strong>手动对谈</strong>：设定一个话题（比如「今天的异变」「蘑菇收成」），两位主角轮流接话；台词逐句点击推进，对话中随时可以插一句<strong>旁白</strong>推进剧情，结束后点「继续对话」还能接着聊。</li>
+            <li><strong>自动闲聊</strong>：管理员开启后，两人会在独立界面里不停闲聊；观众可以提议话题并投票，票数攒够就换题，没人提议时系统也会随机换题。</li>
+            <li><strong>油库里语音</strong>：每句台词可配「ゆっくり」风格语音（服务器代理，页面里直接开启即可）。</li>
+            <li><strong>人设管理</strong>：手动对谈的人设人人都能改（只存在你自己的浏览器里），分为基础设定、补充设定和自动组合的系统提示词。</li>
+            <li><strong>一设数据库</strong>：内置东方官方设定参考（整理自 THBWiki），帮助 AI 不崩人设；内容可以自己修改，仅本机生效。</li>
+            <li><strong>自查 AI（防 OOC）</strong>：填上自己的 API 后，每次输出前会多一次检查，台词不符合人设或一设时会自动润色；不配置就不启用。</li>
+            <li><strong>自动总结</strong>：对话积累到一定条数后，会自动把旧内容压缩成「前情提要」，既省 token 又能保持上下文连贯。</li>
+            <li><strong>演示模式</strong>：不接任何 API 也能玩，用内置台词演出，开箱即用。</li>
+          </ul>
+
+          <h4>关于内置 API（请务必看）</h4>
+          <p>网站默认使用<strong>服务器内置 API Key</strong> 驱动 AI，由服务器代为调用、不会下发到浏览器。内置 token 是<strong>有限的</strong>——如果哪天 AI 不回复或报「调用失败」，可能就是这个原因。如果你有能力，建议在「设置 → AI」里填上自己的 API Key（兼容 OpenAI 格式的服务都可以），填了之后会优先使用你自己的 Key；Key 只保存在你的浏览器本地，不会写进日志或外传。</p>
+
+          <h4>版权声明</h4>
+          <p>角色与世界观来自《东方Project》（ZUN），本页面为同人娱乐作品，并非官方出品。全身立绘使用 dairi / だいり 的仿黄昏绘作品，仅供学习交流，版权归原作者所有。背景插画为自备素材，如原作者要求，可随时替换。</p>
+        </section>
       </div>
-      </section>
-    </div>
+      </div>
+    </aside>
 
     <div class="view" id="autoView" hidden>
       <section class="auto-panel" id="autoPanel" aria-label="自动闲聊">
@@ -274,6 +354,7 @@
           <span class="topic-chip weather-chip" id="weatherChip" hidden></span>
           <button class="btn small" id="topicPanelBtn" disabled>话题投票</button>
           <button class="btn small" id="summaryPanelBtn" type="button">总结</button>
+          <button class="btn small ghost" id="autoBacklogBtn" type="button">记录</button>
         </div>
         <div class="gift-bar" id="giftBar" hidden>
           <span class="gift-label">投喂</span>
@@ -302,71 +383,25 @@
       </section>
 
       <main class="chat">
-        <div class="chat-log" id="autoChatLog" role="log" aria-live="polite">
-          <div class="welcome" id="autoWelcome">
-            <p>自动闲聊未开启。</p>
-            <p>管理员在 config.json 里把 autoChatEnabled 设为 true 后，这里会直播两人的闲聊。</p>
+        <div class="gal-box" id="autoGalBox" title="点击推进对话">
+          <div class="gal-nameplate" id="autoGalNameplate" hidden></div>
+          <div class="gal-text" id="autoGalText">
+            <div class="gal-idle">
+              <p>自动闲聊未开启。</p>
+              <p>管理员在 config.json 里把 autoChatEnabled 设为 true 后，这里会直播两人的闲聊。</p>
+            </div>
           </div>
+          <span class="gal-cursor" id="autoGalCursor" hidden>▼</span>
+          <div class="gal-hint" id="autoGalHint" hidden></div>
         </div>
+        <div class="chat-log gal-backlog" id="autoChatLog" hidden></div>
       </main>
-    </div>
-
-    <footer class="footer">
-      <p>灵感来自《东方Project》 · 页面仅供同人娱乐，非官方作品</p>
-      <p>立绘：dairi / はるか（伪黄昏绘） · 仅供学习交流，版权归原作者所有</p>
-    </footer>
-  </div>
-
-  <div class="modal-overlay" id="manualHistoryModal" hidden>
-    <div class="modal-card">
-      <div class="modal-head">
-        <h2>历史对话</h2>
-        <button class="btn ghost small" id="manualHistoryCloseBtn" type="button">关闭</button>
-      </div>
-      <div class="modal-body">
-        <p class="vote-hint">以下是保存过的历史手动对谈，点击「打开」可查看并继续。</p>
-        <div class="manual-history-list" id="manualHistoryList"></div>
-      </div>
     </div>
   </div>
 
   <div class="toast" id="toast" hidden></div>
 
-  <div class="modal-overlay" id="aboutModal" hidden>
-    <div class="modal-card">
-      <div class="modal-head">
-        <h2>红白与黑白 · 使用说明</h2>
-        <button class="btn ghost small" id="aboutCloseBtn" type="button">关闭</button>
-      </div>
-      <div class="modal-body">
-        <p>欢迎来到「红白与黑白」茶话会。这是一个让<strong>博丽灵梦</strong>和<strong>雾雨魔理沙</strong>用 AI 互相对话的同人小站，目前提供两种玩法。</p>
-
-        <h3>功能介绍</h3>
-        <ul>
-          <li><strong>手动对谈</strong>：设定一个话题（比如「今天的异变」「蘑菇收成」），两位主角轮流接话；对话中随时可以插一句<strong>旁白</strong>推进剧情，结束后点「继续对话」还能接着聊。</li>
-          <li><strong>自动闲聊</strong>：管理员开启后，两人会在独立界面里不停闲聊；观众可以提议话题并投票，票数攒够就换题，没人提议时系统也会随机换题。</li>
-          <li><strong>人设管理</strong>：手动对谈的人设人人都能改（只存在你自己的浏览器里），分为基础设定、补充设定和自动组合的系统提示词，默认是为主角组 CP 向打磨过的预设。</li>
-          <li><strong>一设数据库</strong>：内置东方官方设定参考（整理自 THBWiki），包括两人的一设、幻想乡世界观、主角组关系和 AI 易错提醒，帮助 AI 不崩人设；内容可以自己修改，仅本机生效。</li>
-          <li><strong>自查 AI（防 OOC）</strong>：在「设置」里填上自己的 API 后，每次输出前会多一次检查，台词不符合人设或一设时会自动润色；不配置就不启用。</li>
-          <li><strong>自动总结</strong>：对话积累到一定条数后，会自动把旧内容压缩成「前情提要」，既省 token 又能保持上下文连贯。</li>
-          <li><strong>演示模式</strong>：不接任何 API 也能玩，用内置台词演出，开箱即用。</li>
-        </ul>
-
-        <h3>关于内置 API（请务必看）</h3>
-        <p>网站默认使用<strong>作者自己的 DeepSeek API Key</strong> 驱动 AI，由服务器代为调用、不会下发到浏览器。但作者的 token 是<strong>有限的，跑完就没有了</strong>——如果哪天 AI 不回复或报「调用失败」，可能就是这个原因，请多包涵。</p>
-        <p>因此，<strong>如果你有能力，建议在页面「⚙ 设置」里填上自己的 API Key</strong>（兼容 OpenAI 格式的服务都可以，比如 DeepSeek、通义等），填了之后会优先使用你自己的 Key。Key 只保存在你的浏览器本地、只发给本地服务器，不会写进日志，也不会外传。</p>
-        <p>自查 AI 和总结 API 也都可以在设置里单独配置自己的 Key，自查 AI 默认不使用内置 API。</p>
-
-        <h3>后台管理说明</h3>
-        <p>服务器级开关（内置 AI、自动闲聊、自动闲聊人设、一设默认值等）由管理员在 <code>config.json</code> 里直接修改，保存后自动生效，前端不提供管理界面。如果你看到自动闲聊未开启，说明管理员还没有打开它。</p>
-
-        <h3>版权声明</h3>
-        <p>角色与世界观来自《东方Project》（ZUN），本页面为同人娱乐作品，并非官方出品。立绘使用 dairi / はるか 的仿黄昏绘（伪黄昏绘）作品裁出的头部特写，仅供学习交流，版权归原作者所有；如原作者要求，可随时替换。</p>
-      </div>
-    </div>
-  </div>
-
-  <script src="demo.js?v=28"></script>
-  <script type="module" src="js/main.js?v=28"></script>
+  <script src="demo.js?v=32"></script>
+  <script type="module" src="js/main.js?v=32"></script>
 </body>
 </html>

@@ -1,9 +1,14 @@
-import { els, state, sleepMs, SUMMARY_STRENGTHS, SUMMARY_STRENGTH_LABELS } from './core.js';
-import { toast, appendSystem, appendMessageSplit, appendMessageSplitAnimated, appendTyping, removeTyping, scrollToBottom } from './render.js';
+import { els, state, SUMMARY_STRENGTHS, SUMMARY_STRENGTH_LABELS } from './core.js';
+import { toast, appendSystem, appendMessageSplit, scrollToBottom } from './render.js';
+import { enqueueGal, setProducerGal, resetGal, flushGal, redrawGal } from './gal.js';
 
 // ---------- 模式徽章与控件状态 ----------
 export function updateModeBadge() {
-  if (state.settings.apiKey) {
+  if (state.aiUnavailable) {
+    state.mode = 'demo';
+    els.modeBadge.textContent = '演示模式（AI 网络不可用）';
+    els.modeBadge.className = 'mode-badge demo';
+  } else if (state.settings.apiKey) {
     state.mode = 'ai';
     els.modeBadge.textContent = 'AI 实时对话（自填 Key）';
     els.modeBadge.className = 'mode-badge ai';
@@ -42,8 +47,12 @@ export function clearChat() {
   state.manualSessionId = null;
   state.pendingTurns = 0;
   state.interjectQueue = [];
+  resetGal('manual');
   els.chatLog.innerHTML = '';
-  els.chatLog.appendChild(els.welcome);
+  const topicBadge = document.getElementById('manualTopicBadge');
+  const progress = document.getElementById('dialogueProgress');
+  if (topicBadge) topicBadge.textContent = '等待你的开场';
+  if (progress) progress.textContent = '—';
   if (els.topicInput) els.topicInput.value = '';
   syncControls();
   // 服务端只清手动对谈残留的场景备注，自动闲聊的一切状态（话题、历史、总结、心动回忆）都不受影响
@@ -78,6 +87,7 @@ export async function fetchState() {
       els.summaryStrengthValue.textContent = SUMMARY_STRENGTH_LABELS[ssi] || SUMMARY_STRENGTH_LABELS[0];
     }
     if (data.autoChatEnabled) {
+      setProducerGal('auto', true);
       if (!state.autoActive) {
         enterAutoMode(data);
       } else {
@@ -106,6 +116,7 @@ export function switchView(view) {
   els.autoView.hidden = !auto;
   els.manualTab.classList.toggle('active', !auto);
   els.autoTab.classList.toggle('active', auto);
+  redrawGal();
   scrollToBottom();
 }
 
@@ -177,7 +188,9 @@ function enterAutoMode(data) {
   state.autoActive = true;
   els.autoChatLog.innerHTML = '';
   state.lastAutoMsgId = 0;
+  resetGal('auto');
   renderAutoLog(data.log || []);
+  setProducerGal('auto', true);
   switchView('auto');
   if (state.initialized) toast('自动闲聊已开启');
   syncControls();
@@ -185,8 +198,9 @@ function enterAutoMode(data) {
 
 function exitAutoMode() {
   state.autoActive = false;
-  els.autoChatLog.innerHTML = '';
-  els.autoChatLog.appendChild(els.autoWelcome);
+  // 没点完的台词直接收进记录，不丢
+  flushGal('auto', { keepBacklog: true });
+  setProducerGal('auto', false);
   if (state.initialized) toast('自动闲聊已暂停');
   syncControls();
 }
@@ -214,28 +228,15 @@ async function renderNewAutoEntries(log) {
   if (maxId < state.lastAutoMsgId) {
     els.autoChatLog.innerHTML = '';
     state.lastAutoMsgId = 0;
+    resetGal('auto');
     renderAutoLog(log);
     return;
   }
-  // 角色说话前先亮一下「输入中」，让自动闲聊更有活人感
-  state.suppressScroll = true;
+  // Galgame 式：新台词逐句入队，由用户点击推进；语音随出字同步播放，立绘按 AI 标注的情绪切换
   for (const entry of newEntries) {
-    if (entry.type === 'system') {
-      appendSystem(entry.text, els.autoChatLog);
-    } else {
-      const tw = appendTyping(entry.type, els.autoChatLog);
-      await sleepMs(320 + Math.random() * 260);
-      removeTyping(tw);
-      await sleepMs(70 + Math.random() * 110);
-      await appendMessageSplitAnimated(entry.type, entry.text, els.autoChatLog);
-    }
+    enqueueGal('auto', entry.type, entry.text, entry.emotion);
     state.lastAutoMsgId = entry.id;
-    state.suppressScroll = false;
-    scrollToBottom();
-    state.suppressScroll = true;
   }
-  state.suppressScroll = false;
-  scrollToBottom();
 }
 
 function renderCandidates(candidates) {

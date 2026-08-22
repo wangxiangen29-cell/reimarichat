@@ -8,3 +8,15 @@ local_dev/
 reimarichat-deploy.zip
 .env
 corpus/
+
+# yukkuri_cn：AquesTalkPlayer 及其下载包受 A-Quest 许可约束，不得再分发/提交
+tools/yukkuri_cn/third_party/
+tools/yukkuri_cn/output/
+tools/yukkuri_cn/config.json
+tools/yukkuri_cn/history.jsonl
+
+# dairi 立绘差分原图（版权与体积考虑，本地标注用，不入库；可用 tools/download_portraits.py 重新下载）
+public/avatars/src/
+
+# 背景原图（已压缩为 public/scene/shrine_day.jpg）
+/20161005204821_szmLu.jpeg
