@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Testing/coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Type checking/linting
+.mypy_cache/
+.ruff_cache/
+
+# Packaging
+build/
+dist/
+release/
+*.egg-info/
+*.spec
+
+# Editors
+.vscode/
+.vs/
+
+# Project outputs
+output/
+
+# Temporary files
+temp/
+
+# Local files
+third_party/aquestalkplayer/
+third_party/_downloads/
+history.jsonl
+config.json

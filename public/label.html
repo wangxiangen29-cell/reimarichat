@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>立绘差分标注 · 红白与黑白</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #14101f; color: #f3ecdd; font: 14px/1.6 "Microsoft YaHei", sans-serif; }
+    header { position: sticky; top: 0; z-index: 10; padding: 12px 20px; background: rgba(20, 15, 32, .94); border-bottom: 1px solid rgba(255, 224, 174, .2); backdrop-filter: blur(8px); display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    header h1 { margin: 0; font-size: 17px; letter-spacing: .15em; color: #ffe9c4; }
+    header .hint { color: rgba(255, 243, 224, .6); font-size: 12px; }
+    header .spacer { flex: 1; }
+    #saveBtn { padding: 9px 22px; border: 0; border-radius: 9px; background: linear-gradient(90deg, #f2c078, #e89a68); color: #20150a; font-size: 14px; font-weight: 600; cursor: pointer; }
+    #saveBtn:disabled { opacity: .5; cursor: wait; }
+    #saveStatus { font-size: 12px; color: rgba(232, 189, 115, .9); }
+    .emo-panel { max-width: 1500px; margin: 18px auto 0; padding: 12px 16px; border: 1px solid rgba(255, 224, 174, .18); border-radius: 12px; background: rgba(255, 255, 255, .025); }
+    .emo-panel h3 { margin: 0 0 8px; font-size: 13px; color: #fff2d8; letter-spacing: .1em; }
+    .emo-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 7px 5px 12px; border: 1px solid rgba(255, 224, 174, .28); border-radius: 999px; background: rgba(232, 189, 115, .07); font-size: 12.5px; }
+    .chip.noart { opacity: .55; border-style: dashed; }
+    .chip .k { font: 11px ui-monospace, monospace; color: rgba(255, 224, 174, .75); }
+    .chip button { width: 18px; height: 18px; padding: 0; border: 0; border-radius: 50%; background: rgba(224, 106, 90, .2); color: #ff9d90; cursor: pointer; line-height: 1; }
+    .emo-add { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .emo-add input { padding: 7px 10px; border-radius: 8px; border: 1px solid rgba(255, 224, 174, .25); background: #1d1830; color: #f3ecdd; font-size: 12.5px; }
+    .emo-add input::placeholder { color: rgba(255, 243, 224, .4); }
+    #emoKey { width: 110px; } #emoLabel { width: 130px; } #emoKeywords { flex: 1; min-width: 220px; }
+    .emo-add button { padding: 7px 16px; border: 0; border-radius: 8px; background: rgba(232, 189, 115, .16); border: 1px solid rgba(232, 189, 115, .45); color: #ffe5a9; cursor: pointer; }
+    main { max-width: 1500px; margin: 0 auto; padding: 20px; }
+    .group { margin-bottom: 34px; }
+    .group h2 { font-size: 15px; color: #fff2d8; letter-spacing: .12em; border-left: 3px solid #e8bd73; padding-left: 10px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 12px; }
+    .card { border: 1px solid rgba(255, 224, 174, .16); border-radius: 10px; background: rgba(255, 255, 255, .025); overflow: hidden; transition: .15s ease; }
+    .card.selected { border-color: rgba(232, 189, 115, .75); box-shadow: 0 0 0 1px rgba(232, 189, 115, .5), 0 6px 18px rgba(232, 189, 115, .12); }
+    .card .imgwrap { height: 190px; display: grid; place-items: end center; background: linear-gradient(180deg, #6b7280, #4b5563); overflow: hidden; }
+    .card img { max-height: 100%; max-width: 100%; object-fit: contain; object-position: bottom; }
+    .card .meta { padding: 7px 9px 9px; }
+    .card .no { font: 11px ui-monospace, monospace; color: rgba(255, 224, 174, .7); }
+    .card select { width: 100%; margin-top: 5px; padding: 6px 7px; border-radius: 7px; border: 1px solid rgba(255, 224, 174, .25); background: #1d1830; color: #f3ecdd; font-size: 12.5px; }
+    .summary { margin-top: 8px; font-size: 12px; color: rgba(255, 243, 224, .62); }
+    .summary b { color: #ffe5a9; font-weight: 600; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>立绘差分标注</h1>
+  <span class="hint">给每张差分选一个情绪（同一情绪每个角色只保留最后选的一张）；保存后自动压缩替换正式立绘。</span>
+  <span class="spacer"></span>
+  <span id="saveStatus"></span>
+  <button id="saveBtn" type="button">保存并应用</button>
+</header>
+
+<div class="emo-panel">
+  <h3>情绪种类（AI 台词标注 + 切换立绘共用；虚线 = 还没标差分图，不会出现在 AI 选项里）</h3>
+  <div class="emo-chips" id="emoChips"></div>
+  <div class="emo-add">
+    <input id="emoKey" placeholder="key（英文，如 proud）">
+    <input id="emoLabel" placeholder="名称（如 骄傲）">
+    <input id="emoKeywords" placeholder="兜底关键词（可选，逗号分隔，如 骄傲,了不起,夸我）">
+    <button id="emoAddBtn" type="button">＋ 新增情绪</button>
+  </div>
+</div>
+
+<main>
+  <div class="group" id="g-reimu">
+    <h2>博丽灵梦（reimu）</h2>
+    <div class="summary" id="s-reimu"></div>
+    <div class="grid" id="grid-reimu"></div>
+  </div>
+  <div class="group" id="g-marisa">
+    <h2>雾雨魔理沙（marisa）</h2>
+    <div class="summary" id="s-marisa"></div>
+    <div class="grid" id="grid-marisa"></div>
+  </div>
+</main>
+<script>
+const COUNTS = { reimu: 27, marisa: 54 };
+// char -> emotionKey -> {page, card, sel}
+const picked = { reimu: {}, marisa: {} };
+let emotions = []; // {key,label,keywords,hasArt}
+
+async function loadEmotions() {
+  const res = await fetch('/api/emotions', { cache: 'no-store' });
+  const data = await res.json();
+  emotions = data.emotions || [];
+  // 探测差分图是否已存在（任一角色有即算有图）
+  await Promise.all(emotions.map((e) => new Promise((resolve) => {
+    const suffix = e.key === 'normal' ? 'full' : e.key;
+    const probe = new Image();
+    probe.onload = () => { e.hasArt = true; resolve(); };
+    probe.onerror = () => { e.hasArt = false; resolve(); };
+    probe.src = `avatars/reimu_${suffix}.png`;
+  })));
+}
+
+function renderChips() {
+  const box = document.getElementById('emoChips');
+  box.innerHTML = '';
+  for (const e of emotions) {
+    const chip = document.createElement('span');
+    chip.className = 'chip' + (e.hasArt ? '' : ' noart');
+    const label = document.createElement('span');
+    label.textContent = e.label;
+    const k = document.createElement('span');
+    k.className = 'k';
+    k.textContent = e.key + (e.hasArt ? '' : ' ·未标图');
+    chip.appendChild(label);
+    chip.appendChild(k);
+    const del = document.createElement('button');
+    del.textContent = '×';
+    del.title = '删除该情绪';
+    del.addEventListener('click', async () => {
+      if (!confirm(`删除情绪「${e.label}(${e.key})」？已标的差分文件不会被删。`)) return;
+      const res = await fetch('/api/emotions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'remove', key: e.key }) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return alert(data.error || '删除失败');
+      await loadEmotions();
+      rebuildAll();
+    });
+    chip.appendChild(del);
+    box.appendChild(chip);
+  }
+}
+
+function updateSummary(char) {
+  const parts = emotions.map((e) => {
+    const p = picked[char][e.key];
+    return e.label + ': ' + (p ? 'p' + String(p.page).padStart(2, '0') : '—');
+  });
+  document.getElementById('s-' + char).innerHTML = '当前选择 → ' + parts.map((p) => '<b>' + p + '</b>').join(' · ');
+}
+
+function build(char) {
+  const grid = document.getElementById('grid-' + char);
+  grid.innerHTML = '';
+  for (let i = 0; i < COUNTS[char]; i++) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    const wrap = document.createElement('div');
+    wrap.className = 'imgwrap';
+    const img = document.createElement('img');
+    img.loading = 'lazy';
+    img.src = `avatars/src/${char}_p${String(i).padStart(2, '0')}.png`;
+    wrap.appendChild(img);
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    const no = document.createElement('div');
+    no.className = 'no';
+    no.textContent = char + ' · 第 ' + i + ' 页';
+    const sel = document.createElement('select');
+    const opt0 = document.createElement('option');
+    opt0.value = '';
+    opt0.textContent = '— 不使用 —';
+    sel.appendChild(opt0);
+    for (const e of emotions) {
+      const o = document.createElement('option');
+      o.value = e.key;
+      o.textContent = e.key === 'normal' ? 'normal（默认立绘）' : `${e.key}（${e.label}）`;
+      sel.appendChild(o);
+    }
+    sel.addEventListener('change', () => {
+      const emo = sel.value;
+      if (emo && picked[char][emo]) {
+        picked[char][emo].sel.value = '';
+        picked[char][emo].card.classList.remove('selected');
+      }
+      for (const k of Object.keys(picked[char])) {
+        if (picked[char][k].card === card) delete picked[char][k];
+      }
+      if (emo) {
+        picked[char][emo] = { page: i, card, sel };
+        card.classList.add('selected');
+      } else {
+        card.classList.remove('selected');
+      }
+      updateSummary(char);
+    });
+    meta.appendChild(no);
+    meta.appendChild(sel);
+    card.appendChild(wrap);
+    card.appendChild(meta);
+    grid.appendChild(card);
+  }
+  updateSummary(char);
+}
+
+function rebuildAll() {
+  renderChips();
+  for (const c of ['reimu', 'marisa']) {
+    for (const k of Object.keys(picked[c])) delete picked[c][k];
+    build(c);
+  }
+}
+
+document.getElementById('emoAddBtn').addEventListener('click', async () => {
+  const key = document.getElementById('emoKey').value.trim();
+  const label = document.getElementById('emoLabel').value.trim();
+  const keywords = document.getElementById('emoKeywords').value.trim();
+  const res = await fetch('/api/emotions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'add', key, label, keywords })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return alert(data.error || '新增失败');
+  document.getElementById('emoKey').value = '';
+  document.getElementById('emoLabel').value = '';
+  document.getElementById('emoKeywords').value = '';
+  await loadEmotions();
+  rebuildAll();
+});
+
+function resizeToDataUrl(img, targetH) {
+  const w = img.naturalWidth, h = img.naturalHeight;
+  const scale = Math.min(1, targetH / h);
+  const cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = cw; canvas.height = ch;
+  canvas.getContext('2d').drawImage(img, 0, 0, cw, ch);
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) return reject(new Error('导出失败'));
+      const fr = new FileReader();
+      fr.onload = () => resolve(fr.result);
+      fr.onerror = reject;
+      fr.readAsDataURL(blob);
+    }, 'image/png');
+  });
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const im = new Image();
+    im.onload = () => resolve(im);
+    im.onerror = () => reject(new Error('加载失败 ' + src));
+    im.src = src;
+  });
+}
+
+document.getElementById('saveBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('saveBtn');
+  const status = document.getElementById('saveStatus');
+  const jobs = [];
+  for (const char of ['reimu', 'marisa']) {
+    for (const [emo, info] of Object.entries(picked[char])) {
+      const file = char + '_' + (emo === 'normal' ? 'full' : emo);
+      jobs.push({ char, emo, file, page: info.page });
+    }
+  }
+  if (!jobs.length) {
+    status.textContent = '还没有选择任何差分';
+    return;
+  }
+  btn.disabled = true;
+  try {
+    for (let i = 0; i < jobs.length; i++) {
+      const j = jobs[i];
+      status.textContent = `处理 ${i + 1}/${jobs.length}：${j.file}（第 ${j.page} 页）…`;
+      const img = await loadImage(`avatars/src/${j.char}_p${String(j.page).padStart(2, '0')}.png`);
+      const dataUrl = await resizeToDataUrl(img, 1170);
+      const res = await fetch('/api/portraits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ file: j.file, dataUrl })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || res.status);
+    }
+    status.textContent = '已保存 ' + jobs.length + ' 张 ✔ 到主页面按 Ctrl+F5 刷新即可看到新差分';
+    await loadEmotions();
+    renderChips();
+  } catch (err) {
+    status.textContent = '保存失败：' + err.message;
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+loadEmotions().then(rebuildAll);
+</script>
+</body>
+</html>

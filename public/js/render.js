@@ -11,14 +11,7 @@ export function toast(msg) {
   }, 5200);
 }
 
-// ---------- 关于弹窗 ----------
-export function openAbout() {
-  els.aboutModal.hidden = false;
-}
-
-export function closeAbout() {
-  els.aboutModal.hidden = true;
-}
+// ---------- 关于说明（已并入设置抽屉，此处保留兼容占位） ----------
 
 // ---------- 断句与渲染 ----------
 export function splitSentences(text) {
@@ -132,6 +125,12 @@ export function appendMessage(speaker, text, container) {
   row.appendChild(avatar);
   row.appendChild(bubble);
   log.appendChild(row);
+  const reimuPortrait = document.getElementById('reimuPortrait');
+  const marisaPortrait = document.getElementById('marisaPortrait');
+  if (reimuPortrait && marisaPortrait && (speaker === 'reimu' || speaker === 'marisa')) {
+    reimuPortrait.classList.toggle('is-speaking', speaker === 'reimu');
+    marisaPortrait.classList.toggle('is-speaking', speaker === 'marisa');
+  }
   if (!state.suppressScroll) scrollToBottom();
   return row;
 }

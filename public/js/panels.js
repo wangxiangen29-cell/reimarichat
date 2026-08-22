@@ -1,5 +1,6 @@
 import { els, state, saveSettings, THINKING_MODES, THINKING_MODE_LABELS } from './core.js';
 import { toast } from './render.js';
+import { openDrawer } from './drawer.js';
 
 // ---------- AI 设置表单 ----------
 export function renderSettings() {
@@ -150,12 +151,8 @@ function restoreModelInput() {
 }
 
 // ---------- 人设管理（手动对谈，人人可改，仅存本机） ----------
-function closePersonaPanel() {
-  els.personaPanel.hidden = true;
-  els.settingsPanel.hidden = !state.settingsWasVisible;
-}
-
 export async function openPersonaPanel() {
+  openDrawer('persona');
   try {
     const manualRes = await fetch('/api/personas/manual', { cache: 'no-store' });
     const manual = await manualRes.json().catch(() => ({}));
@@ -169,10 +166,6 @@ export async function openPersonaPanel() {
     els.personaBaseMarisaInput.value = state.settings.personaBaseMarisa || manual.base.marisa;
     els.personaExtraMarisaInput.value = state.settings.personaExtraMarisa || '';
     refreshPromptPreviews();
-    state.settingsWasVisible = !els.settingsPanel.hidden;
-    els.canonPanel.hidden = true;
-    els.settingsPanel.hidden = true;
-    els.personaPanel.hidden = false;
   } catch (_) {
     toast('无法连接服务器');
   }
@@ -228,12 +221,8 @@ export function resetPersonas() {
 }
 
 // ---------- 一设数据库（手动对谈，人人可改，仅存本机；自动闲聊用服务器配置） ----------
-function closeCanonPanel() {
-  els.canonPanel.hidden = true;
-  els.settingsPanel.hidden = !state.settingsWasVisible;
-}
-
 export async function openCanonPanel() {
+  openDrawer('canon');
   try {
     const res = await fetch('/api/canon', { cache: 'no-store' });
     const data = await res.json().catch(() => ({}));
@@ -247,10 +236,6 @@ export async function openCanonPanel() {
     els.canonWorldInput.value = state.settings.canonWorld || data.defaults.world || '';
     els.canonPairInput.value = state.settings.canonPair || data.defaults.pair || '';
     els.canonNotesInput.value = state.settings.canonNotes || data.defaults.notes || '';
-    state.settingsWasVisible = !els.settingsPanel.hidden;
-    els.personaPanel.hidden = true;
-    els.settingsPanel.hidden = true;
-    els.canonPanel.hidden = false;
   } catch (_) {
     toast('无法连接服务器');
   }
@@ -312,4 +297,3 @@ export function resetCanon() {
   toast('已恢复默认一设（本机）');
 }
 
-export { closePersonaPanel, closeCanonPanel };
